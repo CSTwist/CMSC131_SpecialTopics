@@ -1,0 +1,6 @@
+body {
+  border: 2px solid black; 
+  background: #000000; 
+  margin: 0;
+  overflow: hidden;
+}
