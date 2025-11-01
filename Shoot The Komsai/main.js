@@ -11,12 +11,13 @@ window.addEventListener("resize", resizeCanvas);
 Module.onRuntimeInitialized = () => {
   const update = Module.cwrap("update", null, []);
   const getX = Module.cwrap("get_x", "number", []);
-  const right_movement = Module.cwrap("right_movement", "number", []);
-  const left_movement = Module.cwrap("left_movement", "number", []);
-  const shoot_bullet = Module.cwrap("shoot_bullet", "number", []);
-  const count = Module.cwrap("get_bullet_count", "number", []);
+  const right_movement = Module.cwrap("right_movement", null, []);
+  const left_movement = Module.cwrap("left_movement", null, []);
+  const shoot_bullet = Module.cwrap("shoot_bullet", null, []);
+  const bullet_count = Module.cwrap("get_bullet_count", "number", []);
+  const komsai_count = Module.cwrap("get_komsai_count", "number", []);
+  const generate_komsai = Module.cwrap("generate_komsai", null, []);
 
-  
   const scale = 8;
   const shipPattern = [
     [0,0,0,1,0,0,0],
@@ -27,6 +28,15 @@ Module.onRuntimeInitialized = () => {
     [0,1,1,0,1,1,0],
     [0,0,1,0,1,0,0]
   ];
+
+  //Komsai Image
+  const img = new Image();
+  img.src = "assets/images/Hew2.png";
+  let lastKomsaiSpawn = 0;
+  const SPAWN_COOLDOWN = 1000;
+  img.onload = function(){
+    loop();
+  }
 
   function loop() {
     handleInput()
@@ -47,14 +57,20 @@ Module.onRuntimeInitialized = () => {
     }
 
     //Bullet Rendering
-    for (let i = 0; i < count(); i++) {
+    for (let i = 0; i < bullet_count(); i++) {
       const x = Module._get_bullet_x(i);
       const y = Module._get_bullet_y(i);
       ctx.fillRect(x, y, 8, 16);
     }
 
     //Komsai Rendering
-    // (Not implemented yet)
+    spawnKomsai();
+    for (let i = 0; i < komsai_count(); i++) {
+      const x = Module._get_komsai_x(i);
+      const y = Module._get_komsai_y(i);
+      ctx.drawImage(img, x, y, 56, 56);
+    }
+
     requestAnimationFrame(loop);
   }
 
@@ -81,5 +97,11 @@ Module.onRuntimeInitialized = () => {
     }
   }
 
-  loop();
+  function spawnKomsai() {
+    const now = Date.now();
+    if (now - lastKomsaiSpawn >= SPAWN_COOLDOWN) {
+      generate_komsai();
+      lastKomsaiSpawn = now;
+    }
+  }
 };
