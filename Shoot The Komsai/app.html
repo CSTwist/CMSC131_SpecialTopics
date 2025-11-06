@@ -15,5 +15,10 @@
   </div>
   <script src="game.js"></script>
   <script src="main.js"></script>
+  <script>
+  window.addEventListener('beforeunload', () => {
+    navigator.sendBeacon('close');
+  });
+  </script>
 </body>
 </html>
