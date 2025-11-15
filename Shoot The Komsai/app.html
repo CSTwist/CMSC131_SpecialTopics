@@ -7,18 +7,176 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+  <style>
+    @keyframes blink { 50% { opacity: 0; } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeSlideUp { from { opacity:0; transform: translateY(50px);} to { opacity:1; transform:translateY(0);} }
+
+    @keyframes shakeScale {
+      0% { transform: scale(1) translate(0,0); }
+      25% { transform: scale(1.03) translate(-1px,1px); }
+      50% { transform: scale(0.97) translate(1px,-1px); }
+      75% { transform: scale(1.02) translate(-1px,0px); }
+      100% { transform: scale(1) translate(0,0); }
+    }
+
+    .pixelify-sans-text { font-family: 'Pixelify Sans', sans-serif; }
+    .main-title { animation: shakeScale 2s infinite ease-in-out; }
+  </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="1200" height="600"></canvas>
-  <div class="SHOOT_THE_KOMSAI_Canvas">
+
+  <canvas id="starfieldCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none;"></canvas>
+
+  <div id="main-menu" style="
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    position:absolute; width:100%; height:100%; color:white;
+    z-index:10; text-align:center; opacity:0; animation:fadeIn 1.5s forwards;
+  ">
+    <h1 class="pixelify-sans-text main-title" style="font-size:80px; animation: fadeSlideUp 1.5s;">SHOOT THE KOMSAI</h1>
+    <p id="press-start" style="
+      font-size:32px; margin-top:40px; color:white;
+      animation: blink 1s step-start infinite;
+    ">PRESS ENTER TO START</p>
+  </div>
+
+  <div id="instructions-screen" style="
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    position:absolute; width:100%; height:100%; background: rgba(0,0,0,0.3);
+    color:white; z-index:20; font-family:'Pixelify Sans', sans-serif; animation:fadeSlideUp 1s forwards;
+  ">
+    <h2 style="font-size:60px; margin-bottom:40px;">How to Play</h2>
+    <ol style="font-size:28px; line-height:1.8; text-align:left; max-width:80%;">
+      <li>The player controls a spaceship that moves horizontally along the bottom of the screen.</li>
+      <li><strong>CONTROLS:</strong> ← Left, → Right, Spacebar to shoot.</li>
+      <li>The spaceship has a life bar (5 lives or more).</li>
+      <li>Two frames appear at the top left: one shows the target item to shoot, the other shows a healing item.</li>
+      <li>Shoot target items before they reach the bottom, or you lose 1 life per item missed.</li>
+      <li>Items are the faces of Komsai faculties or students.</li>
+    </ol>
+    <p style="margin-top:40px; font-size:32px; animation: blink 1s step-start infinite;">Press Enter to start the game</p>
+  </div>
+
+  <canvas id="gameCanvas" width="1200" height="600" style="display:none;"></canvas>
+  <div class="SHOOT_THE_KOMSAI_Canvas" style="display:none;">
     <p id="score" class="pixelify-sans-text">SHOOT THE KOMSAI</p>
   </div>
+
   <script src="game.js"></script>
   <script src="main.js"></script>
+
   <script>
-  window.addEventListener('beforeunload', () => {
-    navigator.sendBeacon('close');
-  });
+    const starCanvas = document.getElementById('starfieldCanvas');
+    const sCtx = starCanvas.getContext('2d');
+    const STAR_COUNT = 180;
+    const stars = [];
+    const mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+
+    function resizeStarCanvas() {
+      starCanvas.width = window.innerWidth;
+      starCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeStarCanvas);
+    resizeStarCanvas();
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    const colors = [
+      'rgba(255,255,255,',
+      'rgba(200,220,255,',
+      'rgba(255,255,200,',
+      'rgba(255,200,255,',
+      'rgba(180,255,255,'
+    ];
+
+    for (let i = 0; i < STAR_COUNT; i++) {
+      stars.push({
+        x: Math.random() * starCanvas.width,
+        y: Math.random() * starCanvas.height,
+        size: Math.random() * 2 + 0.5,
+        baseOpacity: Math.random() * 0.5 + 0.5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        speedY: Math.random() * 0.3 + 0.1,
+        twinkleSpeed: Math.random() * 0.02 + 0.01,
+        phase: Math.random() * Math.PI * 2,
+        offsetX: 0,
+        offsetY: 0
+      });
+    }
+
+    function drawStars() {
+      sCtx.clearRect(0, 0, starCanvas.width, starCanvas.height);
+      stars.forEach(star => {
+        const twinkle = Math.sin(Date.now() * star.twinkleSpeed + star.phase) * 0.5 + 0.5;
+        const opacity = Math.min(1, star.baseOpacity * (0.7 + twinkle * 0.8));
+
+        sCtx.beginPath();
+        sCtx.arc(star.x + star.offsetX, star.y + star.offsetY, star.size, 0, Math.PI * 2);
+        sCtx.fillStyle = `${star.color}${opacity})`;
+        sCtx.shadowBlur = 15;
+        sCtx.shadowColor = "white";
+        sCtx.fill();
+        sCtx.shadowBlur = 0;
+      });
+    }
+
+    function updateStars() {
+      stars.forEach(star => {
+        star.y += star.speedY;
+        if (star.y > starCanvas.height) {
+          star.y = 0;
+          star.x = Math.random() * starCanvas.width;
+        }
+
+        const dx = mouse.x - (star.x + star.offsetX);
+        const dy = mouse.y - (star.y + star.offsetY);
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const influence = Math.max(0, 150 - dist) / 150;
+        star.offsetX += dx * influence * 0.03;
+        star.offsetY += dy * influence * 0.03;
+
+        star.offsetX *= 0.95;
+        star.offsetY *= 0.95;
+      });
+    }
+
+    function animateStars() {
+      updateStars();
+      drawStars();
+      requestAnimationFrame(animateStars);
+    }
+    animateStars();
+
+    const mainMenu = document.getElementById('main-menu');
+    const instructionsScreen = document.getElementById('instructions-screen');
+    const startSound = new Audio("assets/music/start.mp3");
+    startSound.volume = 0.5;
+    startSound.loop = true;
+    let musicStarted = false;
+
+    window.addEventListener('click', () => {
+      if (!musicStarted) { startSound.play().catch(()=>{}); musicStarted = true; }
+    });
+
+    window.addEventListener('keydown', (event) => {
+      if (!musicStarted) { startSound.play().catch(()=>{}); musicStarted = true; }
+      if (event.code === 'Enter') {
+        if (mainMenu.style.display !== 'none') {
+          mainMenu.style.display = 'none';
+          instructionsScreen.style.display = 'flex';
+        } else if (instructionsScreen.style.display !== 'none') {
+          instructionsScreen.style.display = 'none';
+          document.getElementById('gameCanvas').style.display = 'block';
+          document.querySelector('.SHOOT_THE_KOMSAI_Canvas').style.display = 'flex';
+          if (typeof Module !== 'undefined' && Module._main) Module._main();
+        }
+      }
+    });
+
+    window.addEventListener('beforeunload', () => { navigator.sendBeacon('close'); });
   </script>
 </body>
 </html>
