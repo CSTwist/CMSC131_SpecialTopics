@@ -1,29 +1,44 @@
-body {
-  border: 2px solid black; 
-  background: #000000; 
+* {
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #000000;
+  border: 2px solid black;
   overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  font-family: "Pixelify Sans", sans-serif;
+  color: white;
 }
 
 .SHOOT_THE_KOMSAI_Canvas {
+  position: absolute;
+  bottom: 0;
   width: 100%;
   display: flex;
-  flex-direction: row;
-  user-select: none;
-  position: absolute;
-  bottom: 0px;
   justify-content: center;
-  color: white;
-  border-top: #ffffff 2px solid;
+  align-items: flex-end;
+  border-top: 2px solid #ffffff;
+  user-select: none;
+  min-height: 30vh;
 }
 
 .pixelify-sans-text {
-  margin-top: 0;
-  margin-bottom: 0;
-  max-width: 50%;
   font-family: "Pixelify Sans", sans-serif;
-  font-optical-sizing: auto;
   font-weight: 600;
   font-style: normal;
-  font-size: 80px;
+  font-optical-sizing: auto;
+  font-size: clamp(40px, 10vw, 80px);
+  max-width: 50%;
+  text-align: center;
+  color: white;
+}
+
+canvas {
+  width: 100%;
+  height: auto;
+  display: block;
 }
