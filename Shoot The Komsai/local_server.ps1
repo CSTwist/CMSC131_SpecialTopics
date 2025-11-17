@@ -1,7 +1,7 @@
 # --- local_server.ps1 ---
-# Cleanest possible ASCII version
+# PowerShell local server with WASM range support
 
-$port = Get-Random -Minimum 8000 -Maximum 9000
+$port = 8080
 $baseUrl = "http://localhost:$port/"
 $sessionId = [guid]::NewGuid().ToString()
 $fullUrl = $baseUrl + "?session=" + $sessionId
@@ -28,39 +28,52 @@ try {
         $req = $context.Request
         $res = $context.Response
 
+        # Always add CORS for WASM
+        $res.AddHeader("Access-Control-Allow-Origin", "*")
+
         $path = $req.Url.LocalPath.TrimStart('/')
-
-        if ($path -eq "close") {
-            Write-Host "Close signal received - stopping server..."
-            $res.StatusCode = 200
-            $msg = [System.Text.Encoding]::UTF8.GetBytes("Server closing")
-            $res.ContentType = "text/plain"
-            $res.ContentLength64 = $msg.Length
-            $res.OutputStream.Write($msg, 0, $msg.Length)
-            $res.OutputStream.Close()
-            break
-        }
-
         if ([string]::IsNullOrWhiteSpace($path)) { $path = "app.html" }
+
         $file = Join-Path (Get-Location) $path
 
         if (Test-Path $file) {
+            Write-Host "Serving file: $file"
+
             $bytes = [System.IO.File]::ReadAllBytes($file)
-            switch -Regex ($file) {
-                '\.html?$' { $res.ContentType = 'text/html' }
-                '\.js$'    { $res.ContentType = 'application/javascript' }
-                '\.wasm$'  { $res.ContentType = 'application/wasm' }
-                '\.css$'   { $res.ContentType = 'text/css' }
-                '\.png$'   { $res.ContentType = 'image/png' }
-                '\.jpg$'   { $res.ContentType = 'image/jpeg' }
-                '\.gif$'   { $res.ContentType = 'image/gif' }
-                '\.svg$'   { $res.ContentType = 'image/svg+xml' }
-                default    { $res.ContentType = 'application/octet-stream' }
+            $res.ContentType = switch -Regex ($file) {
+                '\.html?$' { 'text/html' }
+                '\.js$'    { 'application/javascript' }
+                '\.wasm$'  { 'application/wasm' }
+                '\.css$'   { 'text/css' }
+                '\.png$'   { 'image/png' }
+                '\.jpg$'   { 'image/jpeg' }
+                '\.gif$'   { 'image/gif' }
+                '\.svg$'   { 'image/svg+xml' }
+                default    { 'application/octet-stream' }
             }
+
+            # Handle Range requests for WASM
+            $rangeHeader = $req.Headers["Range"]
+            if ($rangeHeader -and $file -match '\.wasm$') {
+                if ($rangeHeader -match "bytes=(\d+)-(\d*)") {
+                    $start = [int64]$matches[1]
+                    $end = if ($matches[2]) { [int64]$matches[2] } else { $bytes.Length - 1 }
+                    $length = $end - $start + 1
+                    $res.StatusCode = 206
+                    $res.AddHeader("Content-Range", "bytes $start-$end/$($bytes.Length)")
+                    $res.ContentLength64 = $length
+                    $res.OutputStream.Write($bytes, $start, $length)
+                    $res.OutputStream.Close()
+                    continue
+                }
+            }
+
+            # Regular full file response
             $res.ContentLength64 = $bytes.Length
             $res.OutputStream.Write($bytes, 0, $bytes.Length)
         }
         else {
+            Write-Host "404 Not Found: $file"
             $res.StatusCode = 404
             $msg = [System.Text.Encoding]::UTF8.GetBytes("404 Not Found: " + $path)
             $res.ContentType = "text/plain"

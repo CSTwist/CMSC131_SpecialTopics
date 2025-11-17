@@ -26,10 +26,14 @@ public:
     int moveLeft();
     void shootBullet();
     void komsaiGenerator();
+    int get_score();
+    int getPlayerLife() const;
 
 private:
     Game() = default; // private constructor for singleton
 
+    int playerLife = 5;
+    int score = 0;
     int playerXMovement = 0;
     int screenWidth = 0;
     int screenHeight = 0;
@@ -57,18 +61,26 @@ void Game::update() {
         it->set_KomsaiY(it->get_KomsaiY() + it->get_KomsaiSpeed());
 
         if (it->get_KomsaiY() > getScreenHeight()) {
+            if (it->get_KomsaiType() == Komsai::TARGET && playerLife > 0) {
+                playerLife--;
+            }
             it = komsais.erase(it);
             continue;
         }
 
         bool destroyed = false;
         for (auto bulletIt = bullets.begin(); bulletIt != bullets.end(); ) {
-            if (bulletIt->get_bulletY() < it->get_KomsaiY() + 56 &&
+            if (bulletIt->get_bulletY() < it->get_KomsaiY() + 150 &&
                 bulletIt->get_bulletY() + 16 > it->get_KomsaiY() &&
-                bulletIt->get_bulletX() < it->get_KomsaiX() + 56 &&
+                bulletIt->get_bulletX() < it->get_KomsaiX() + 150 &&
                 bulletIt->get_bulletX() + 8 > it->get_KomsaiX()) {
 
                 bulletIt = bullets.erase(bulletIt);
+                if (it ->get_KomsaiType() == Komsai::TARGET) {
+                    score += 10;
+                } else if (it ->get_KomsaiType() == Komsai::HEALER && playerLife < 5) {
+                    playerLife++;
+                }
                 it = komsais.erase(it);
                 destroyed = true;
                 break; // exit inner loop safely
@@ -107,19 +119,19 @@ int Game::getScreenHeight() {
 }
 
 int Game::moveRight() {
-    playerXMovement = 5;
+    playerXMovement = 10;
     return playerXMovement;
 }
 
 int Game::moveLeft() {
-    playerXMovement = -5;
+    playerXMovement = -10;
     return playerXMovement;
 }
 
 void Game::shootBullet() {
     Bullet bullet;
     bullet.set_bulletX(playerX + SHIP_WIDTH / 2);
-    bullet.set_bulletY(getScreenHeight()-160);
+    bullet.set_bulletY(getScreenHeight()-80);
     bullet.set_bulletSpeed(-10);
     bullet.set_BulletHitLine(Bullet::BulletHitLine{bullet.get_bulletX(), bullet.get_bulletX() + 8, bullet.get_bulletY()});
     bullets.push_back(bullet);
@@ -130,10 +142,24 @@ void Game::komsaiGenerator() {
     komsai.set_KomsaiX(rand() % (getScreenWidth() - 56));
     komsai.set_KomsaiY(0);
     komsai.set_KomsaiSpeed(2);
-    komsai.set_KomsaiHitLine(Komsai::KomsaiHitLine{komsai.get_KomsaiX(), komsai.get_KomsaiX() + 56, komsai.get_KomsaiY()});
+    komsai.set_KomsaiHitLine(Komsai::KomsaiHitLine{komsai.get_KomsaiX(), komsai.get_KomsaiX() + 100, komsai.get_KomsaiY()});
+    int r = rand() % 4;
+    Komsai::KomsaiType type;
+
+    if (r == 0) type = Komsai::HEALER;
+    else type = Komsai::TARGET; 
+
+    komsai.set_KomsaiType(type);
     komsais.push_back(komsai);
 }
 
+int Game::get_score() {
+    return score;
+}
+
+int Game::getPlayerLife() const {
+    return playerLife;
+}
 // ---------------- Exposed to JavaScript ----------------
 extern "C" {
 
@@ -201,7 +227,24 @@ int get_komsai_count() {
 }
 
 EMSCRIPTEN_KEEPALIVE
+int get_komsai_type(int index) {
+    const auto& komsais = Game::instance().getKomsais();
+    if (index < 0 || index >= komsais.size()) return -1;
+    return komsais[index].get_KomsaiType();
+}
+
+EMSCRIPTEN_KEEPALIVE
 void generate_komsai() {
     Game::instance().komsaiGenerator();
 }
+
+EMSCRIPTEN_KEEPALIVE
+int get_score() {
+    return Game::instance().get_score();
+}
+
+EMSCRIPTEN_KEEPALIVE
+int get_player_life() {
+    return Game::instance().getPlayerLife();
 } // extern "C"
+}
