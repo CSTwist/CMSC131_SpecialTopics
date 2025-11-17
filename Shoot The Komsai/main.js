@@ -9,6 +9,7 @@ window.startGame = function () {
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
 
+    let isPaused = false;
     function initWhenModuleReady() {
         if (!Module || !Module.calledRun) {
             setTimeout(initWhenModuleReady, 50);
@@ -26,6 +27,7 @@ window.startGame = function () {
         const get_komsai_type = Module.cwrap("get_komsai_type", "number", ["number"]);
         const get_score = Module.cwrap("get_score", "number", []);
         const get_player_life = Module.cwrap("get_player_life", "number", []);
+        const get_game_level = Module.cwrap("get_game_level", "number", []);
 
         const scale = 8;
         const shipPattern = [
@@ -69,9 +71,19 @@ window.startGame = function () {
 
         const keysPressed = {};
         let lastShotTime = 0;
-        const SHOOT_COOLDOWN = 300;
+        const SHOOT_COOLDOWN = 500;
 
-        document.addEventListener("keydown", (event) => { keysPressed[event.key] = true; });
+        document.addEventListener("keydown", (event) => {
+            keysPressed[event.key] = true;
+
+            if (event.key === "p" || event.key === "P") {
+                isPaused = !isPaused;
+                if (!isPaused) {
+                    requestAnimationFrame(loop); // resume
+                }
+            }
+        });
+
         document.addEventListener("keyup", (event) => { keysPressed[event.key] = false; });
 
         function handleInput() {
@@ -87,10 +99,10 @@ window.startGame = function () {
             }
         }
 
-        function spawnKomsai(image_path) {
+        function spawnKomsai() {
             const now = Date.now();
             if (now - lastKomsaiSpawn >= SPAWN_COOLDOWN) {
-                generate_komsai(image_path);
+                generate_komsai();
                 lastKomsaiSpawn = now;
             }
         }
@@ -107,6 +119,13 @@ window.startGame = function () {
         }
 
         function loop() {
+            if (isPaused) {
+                ctx.fillStyle = "white";
+                ctx.font = "48px Arial";
+                ctx.fillText("PAUSED", canvas.width/2 - 100, canvas.height/2);
+                return; // stop the loop
+            }
+            
             handleInput();
             update();
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -148,6 +167,7 @@ window.startGame = function () {
 
             document.getElementById("scoreValue").innerText = `${get_score()}`;
             document.getElementById("highScoreValue").innerText = `${sessionStorage.getItem("highScore") || 0}`;
+            document.getElementById("currentLevel").innerText = `${get_game_level() + 1}`;
             // Update life boxes
             const currentLife = get_player_life();
             updateLifeBoxes(currentLife);

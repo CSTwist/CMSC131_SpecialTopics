@@ -1,6 +1,6 @@
 #include "komsai.h"
 
-Komsai::Komsai() : komsaiY(0), komsaiX(0), komsaiSpeed(5), komsaiHitLine{0,0,0}, komsaiType(Komsai::HEALER) {}
+Komsai::Komsai() : komsaiY(0), komsaiX(0), komsaiSpeed(5), komsaiType(Komsai::HEALER) {}
 
 //Getter Implementations
 int Komsai::get_KomsaiY() const{
@@ -17,10 +17,6 @@ int Komsai::get_KomsaiType() const{
     return komsaiType;
 }
 
-Komsai::KomsaiHitLine Komsai::get_KomsaiHitLine() const{
-    return komsaiHitLine;
-}
-
 //Setter Implementations
 void Komsai::set_KomsaiY(int y) {
     this->komsaiY = y;
@@ -33,7 +29,4 @@ void Komsai::set_KomsaiSpeed(int speed) {
 }
 void Komsai::set_KomsaiType(KomsaiType type) {
     this->komsaiType = type;
-}
-void Komsai::set_KomsaiHitLine(KomsaiHitLine komsaiHitLine) {
-    this->komsaiHitLine = komsaiHitLine;
 }
