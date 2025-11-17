@@ -3,6 +3,7 @@
 #include <vector>
 #include "bullet.h"
 #include "komsai.h"
+#include "level.h"
 using namespace std;
 
 constexpr int SHIP_WIDTH = 56;
@@ -28,10 +29,12 @@ public:
     void komsaiGenerator();
     int get_score();
     int getPlayerLife() const;
+    int getcurrentLevel() const;
 
 private:
     Game() = default; // private constructor for singleton
 
+    int currentLevel = 0;
     int playerLife = 5;
     int score = 0;
     int playerXMovement = 0;
@@ -40,7 +43,8 @@ private:
     int playerX = 0;
     vector<Bullet> bullets;
     vector<Komsai> komsais;
-
+    Level gameLevel;
+    int lastMilestone = 0;
 };
 
 // ---------------- Implementation ----------------
@@ -49,61 +53,27 @@ void Game::update() {
     screenWidth = getScreenWidth();
     screenHeight = getScreenHeight();
 
+    gameLevel.set_LevelNumber(currentLevel);
+    if (score >= lastMilestone + 100) {
+        lastMilestone += 100;
+        currentLevel++;
+
+        gameLevel.set_LevelNumber(currentLevel);
+        gameLevel.set_KomsaiMovement(static_cast<Level::KomsaiMovement>(rand() % 3));
+
+        komsais.clear();
+        bullets.clear();
+    }
+
+
     // Player movement
-    playerX += playerXMovement;
-    if (playerX < 0 || playerX > screenWidth - SHIP_WIDTH) {
-        playerXMovement = 0;
-        playerX = (playerX < 0) ? 0 : screenWidth - SHIP_WIDTH;
-    }
+    gameLevel.player_movement(playerX, playerXMovement, screenWidth, SHIP_WIDTH);
 
-    // Falling Komsai movement
-    for (auto it = komsais.begin(); it != komsais.end(); ) {
-        it->set_KomsaiY(it->get_KomsaiY() + it->get_KomsaiSpeed());
-
-        if (it->get_KomsaiY() > getScreenHeight()) {
-            if (it->get_KomsaiType() == Komsai::TARGET && playerLife > 0) {
-                playerLife--;
-            }
-            it = komsais.erase(it);
-            continue;
-        }
-
-        bool destroyed = false;
-        for (auto bulletIt = bullets.begin(); bulletIt != bullets.end(); ) {
-            if (bulletIt->get_bulletY() < it->get_KomsaiY() + 150 &&
-                bulletIt->get_bulletY() + 16 > it->get_KomsaiY() &&
-                bulletIt->get_bulletX() < it->get_KomsaiX() + 150 &&
-                bulletIt->get_bulletX() + 8 > it->get_KomsaiX()) {
-
-                bulletIt = bullets.erase(bulletIt);
-                if (it ->get_KomsaiType() == Komsai::TARGET) {
-                    score += 10;
-                } else if (it ->get_KomsaiType() == Komsai::HEALER && playerLife < 5) {
-                    playerLife++;
-                }
-                it = komsais.erase(it);
-                destroyed = true;
-                break; // exit inner loop safely
-            } else {
-                ++bulletIt;
-            }
-        }
-
-        if (!destroyed) {
-            ++it; // only increment if we didn’t erase
-        }
-    }
+    // Komsai movement
+    gameLevel.komsai_movement(komsais, bullets, score, playerLife, getScreenHeight(), getScreenWidth());
 
     // Bullet movement
-    for (auto it = bullets.begin(); it != bullets.end(); ) {
-        it->set_bulletY(it->get_bulletY() + it->get_bulletSpeed());
-
-        if (it->get_bulletY() < 0) {
-            it = bullets.erase(it);
-        } else {
-            ++it;
-        }
-    }
+    gameLevel.bullet_movement(bullets);
 }
 
 int Game::getScreenWidth() {
@@ -133,24 +103,11 @@ void Game::shootBullet() {
     bullet.set_bulletX(playerX + SHIP_WIDTH / 2);
     bullet.set_bulletY(getScreenHeight()-80);
     bullet.set_bulletSpeed(-10);
-    bullet.set_BulletHitLine(Bullet::BulletHitLine{bullet.get_bulletX(), bullet.get_bulletX() + 8, bullet.get_bulletY()});
     bullets.push_back(bullet);
 }
 
 void Game::komsaiGenerator() {
-    Komsai komsai;
-    komsai.set_KomsaiX(rand() % (getScreenWidth() - 56));
-    komsai.set_KomsaiY(0);
-    komsai.set_KomsaiSpeed(2);
-    komsai.set_KomsaiHitLine(Komsai::KomsaiHitLine{komsai.get_KomsaiX(), komsai.get_KomsaiX() + 100, komsai.get_KomsaiY()});
-    int r = rand() % 4;
-    Komsai::KomsaiType type;
-
-    if (r == 0) type = Komsai::HEALER;
-    else type = Komsai::TARGET; 
-
-    komsai.set_KomsaiType(type);
-    komsais.push_back(komsai);
+    gameLevel.komsaiGenerator(screenWidth, screenHeight, komsais);
 }
 
 int Game::get_score() {
@@ -160,91 +117,101 @@ int Game::get_score() {
 int Game::getPlayerLife() const {
     return playerLife;
 }
+
+int Game::getcurrentLevel() const {
+    return currentLevel;
+}
+
 // ---------------- Exposed to JavaScript ----------------
 extern "C" {
 
-EMSCRIPTEN_KEEPALIVE
-void update() {
-    Game::instance().update();
-}
+    EMSCRIPTEN_KEEPALIVE
+    void update() {
+        Game::instance().update();
+    }
 
-EMSCRIPTEN_KEEPALIVE
-int get_x() {
-    return Game::instance().getPlayerX();
-}
+    EMSCRIPTEN_KEEPALIVE
+    int get_x() {
+        return Game::instance().getPlayerX();
+    }
 
-EMSCRIPTEN_KEEPALIVE
-int right_movement() {
-    return Game::instance().moveRight();
-}
+    EMSCRIPTEN_KEEPALIVE
+    int right_movement() {
+        return Game::instance().moveRight();
+    }
 
-EMSCRIPTEN_KEEPALIVE
-int left_movement() {
-    return Game::instance().moveLeft();
-}
+    EMSCRIPTEN_KEEPALIVE
+    int left_movement() {
+        return Game::instance().moveLeft();
+    }
 
-EMSCRIPTEN_KEEPALIVE
-void shoot_bullet() {
-    Game::instance().shootBullet();
-}
+    EMSCRIPTEN_KEEPALIVE
+    void shoot_bullet() {
+        Game::instance().shootBullet();
+    }
 
-EMSCRIPTEN_KEEPALIVE
-int get_bullet_x(int index) {
-    const auto& bullets = Game::instance().getBullets();
-    if (index < 0 || index >= bullets.size()) return -1;
-    return bullets[index].get_bulletX();
-}
+    EMSCRIPTEN_KEEPALIVE
+    int get_bullet_x(int index) {
+        const auto& bullets = Game::instance().getBullets();
+        if (index < 0 || index >= bullets.size()) return -1;
+        return bullets[index].get_bulletX();
+    }
 
-EMSCRIPTEN_KEEPALIVE
-int get_bullet_y(int index) {
-    const auto& bullets = Game::instance().getBullets();
-    if (index < 0 || index >= bullets.size()) return -1;
-    return bullets[index].get_bulletY();
-}
+    EMSCRIPTEN_KEEPALIVE
+    int get_bullet_y(int index) {
+        const auto& bullets = Game::instance().getBullets();
+        if (index < 0 || index >= bullets.size()) return -1;
+        return bullets[index].get_bulletY();
+    }
 
-EMSCRIPTEN_KEEPALIVE
-int get_bullet_count() {
-    return Game::instance().getBullets().size();
-}
+    EMSCRIPTEN_KEEPALIVE
+    int get_bullet_count() {
+        return Game::instance().getBullets().size();
+    }
 
-EMSCRIPTEN_KEEPALIVE
-int get_komsai_x(int index) {
-    const auto& komsais = Game::instance().getKomsais();
-    if (index < 0 || index >= komsais.size()) return -1;
-    return komsais[index].get_KomsaiX();
-}
+    EMSCRIPTEN_KEEPALIVE
+    int get_komsai_x(int index) {
+        const auto& komsais = Game::instance().getKomsais();
+        if (index < 0 || index >= komsais.size()) return -1;
+        return komsais[index].get_KomsaiX();
+    }
 
-EMSCRIPTEN_KEEPALIVE
-int get_komsai_y(int index) {
-    const auto& komsais = Game::instance().getKomsais();
-    if (index < 0 || index >= komsais.size()) return -1;
-    return komsais[index].get_KomsaiY();
-}
+    EMSCRIPTEN_KEEPALIVE
+    int get_komsai_y(int index) {
+        const auto& komsais = Game::instance().getKomsais();
+        if (index < 0 || index >= komsais.size()) return -1;
+        return komsais[index].get_KomsaiY();
+    }
 
-EMSCRIPTEN_KEEPALIVE
-int get_komsai_count() {
-    return Game::instance().getKomsais().size();
-}
+    EMSCRIPTEN_KEEPALIVE
+    int get_komsai_count() {
+        return Game::instance().getKomsais().size();
+    }
 
-EMSCRIPTEN_KEEPALIVE
-int get_komsai_type(int index) {
-    const auto& komsais = Game::instance().getKomsais();
-    if (index < 0 || index >= komsais.size()) return -1;
-    return komsais[index].get_KomsaiType();
-}
+    EMSCRIPTEN_KEEPALIVE
+    int get_komsai_type(int index) {
+        const auto& komsais = Game::instance().getKomsais();
+        if (index < 0 || index >= komsais.size()) return -1;
+        return komsais[index].get_KomsaiType();
+    }
 
-EMSCRIPTEN_KEEPALIVE
-void generate_komsai() {
-    Game::instance().komsaiGenerator();
-}
+    EMSCRIPTEN_KEEPALIVE
+    void generate_komsai() {
+        Game::instance().komsaiGenerator();
+    }
 
-EMSCRIPTEN_KEEPALIVE
-int get_score() {
-    return Game::instance().get_score();
-}
+    EMSCRIPTEN_KEEPALIVE
+    int get_score() {
+        return Game::instance().get_score();
+    }
 
-EMSCRIPTEN_KEEPALIVE
-int get_player_life() {
-    return Game::instance().getPlayerLife();
-} // extern "C"
+    EMSCRIPTEN_KEEPALIVE
+    int get_player_life() {
+        return Game::instance().getPlayerLife();
+    } // extern "C"
+
+    EMSCRIPTEN_KEEPALIVE
+    int get_game_level() {
+        return Game::instance().getcurrentLevel();
+    }
 }
