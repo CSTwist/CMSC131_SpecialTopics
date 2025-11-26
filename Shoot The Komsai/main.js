@@ -57,7 +57,7 @@ window.startGame = function () {
     const sfxExplosion = new Audio("assets/music/boom2.wav");
     const sfxDamage = new Audio("assets/music/boom11.wav");
     const sfxHeal = new Audio("assets/music/sound3.wav");
-    const sfxAlarm = new Audio("assets/music/alarm.wav");
+    const sfxAlarm = new Audio("assets/music/alarm sound.mp3");
     const startSound = new Audio("assets/music/shoot_sound.mp3");
     const bgMusic = document.getElementById("bgMusic");
 
