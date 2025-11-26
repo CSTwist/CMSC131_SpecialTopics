@@ -201,7 +201,8 @@ window.startGame = function () {
             "assets/images/Hew2.png",
             "assets/images/Soph.png",
             "assets/images/RJ.png",
-            "assets/images/Christian.png"
+            "assets/images/Christian.png",
+            "assets/image/Salmon.png"
         ];
         const komsaiImages = images.map(src => {
             const img = new Image();
