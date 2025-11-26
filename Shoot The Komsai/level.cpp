@@ -32,11 +32,11 @@ void Level::komsaiGenerator(int screenWidth, int screenHeight, vector<Komsai>& k
     if (komsaiMovement == MOVE_LEFT) {
         komsai.set_KomsaiY(rand() % (screenHeight - 500));
         komsai.set_KomsaiX(screenWidth);
-        komsai.set_KomsaiSpeed(4);
+        komsai.set_KomsaiSpeed(2);
     } else if (komsaiMovement == MOVE_RIGHT) {
         komsai.set_KomsaiY(rand() % (screenHeight - 500));
         komsai.set_KomsaiX(100);
-        komsai.set_KomsaiSpeed(4);
+        komsai.set_KomsaiSpeed(2);
     }
     else {
         komsai.set_KomsaiX(rand() % (screenWidth - 56));
