@@ -122,7 +122,7 @@ void Game::shootBulletBoss() {
     Bullet bullet;
     bullet.set_bulletX(getBoss()[0].get_BossKomsaiX() + rand() % 200);
     bullet.set_bulletY(getBoss()[0].get_BossKomsaiY()+150);
-    bullet.set_bulletSpeed(10);
+    bullet.set_bulletSpeed(7);
     bullet.set_bulletType(static_cast<Bullet::BulletType>(1));
     bullets.push_back(bullet);
 }
