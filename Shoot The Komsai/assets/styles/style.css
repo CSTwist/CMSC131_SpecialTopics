@@ -5,7 +5,7 @@
 }
 
 body {
-  background: #000000;
+  background: radial-gradient(circle at bottom, #1b2735 0%, #090a0f 100%);
   border: 2px solid black;
   overflow: hidden;
   width: 100vw;
@@ -26,22 +26,39 @@ body {
 .scoreContainer {
   display: flex;
   flex-direction: column;
-  width: 15%; 
-  border: 2px solid white;
+  width: 15%;
   margin-right: 0px;
   align-items: center;
+  padding-top: 20px;
 }
 
-.highScoreBox, .scoreBox, .targetBox, .healBox{
-  width: 100%;
+.highScoreBox, .scoreBox, .targetBox, .healBox {
+  width: 90%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: grey;
-  font-size: 1.6rem;
-  color: black;
-  border: #000000 solid 2px;
+  background: rgba(20, 20, 20, 0.6);
+  backdrop-filter: blur(5px);
+  border: 2px solid #00ffcc;
+  box-shadow: 0 0 10px #00ffcc, inset 0 0 10px rgba(0, 255, 204, 0.2);
+  border-radius: 12px;
+  font-size: 1.4rem;
+  color: #fff;
+  margin-bottom: 20px;
+  padding: 10px 0;
 }
+
+.targetBox img, .healBox img {
+    border-radius: 50%;
+    margin: 10px 0;
+    border: 3px solid;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    width: 80px;
+    height: 80px;
+}
+
+.targetBox img { border-color: #ff3333; }
+.healBox img { border-color: #33ff33; }
 
 .gameContainer {
   display: flex;
@@ -49,39 +66,62 @@ body {
   flex-direction: column;
   width: 70%;
   margin-left: 0;
+  position: relative;
 }
 
 .lifeContainer{
   display: flex;
   flex-direction: row;
-  top: 10px;
-  left: 10px;
-  width: 20%;
-  height: 10%;
+  justify-content: center;
+  width: 100%;
+  height: 30px;
+  margin-top: 20px;
+  margin-bottom: 10px;
 }
 
 #levelText {
   position: absolute;
-  color: white;
-  font-size: 4rem;
-  top: 0px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
+  color: cyan;
+  font-size: 6rem;
+  text-shadow: 0 0 20px cyan, 4px 4px 0px #000;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 100;
+  white-space: nowrap;
+}
+
+.level-anim {
+  animation: levelFlash 3s forwards;
+}
+
+@keyframes levelFlash {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  10% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+  20% { transform: translate(-50%, -50%) scale(1); }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 .lifeBox {
   height: 100%;
-  width: 20%;
-  background-color: green;
-  border: 2px solid white;
+  width: 40px;
+  background-color: #00ff00;
+  border: 1px solid rgba(255,255,255,0.5);
+  margin: 0 4px;
+  transform: skewX(-20deg);
+  box-shadow: 0 0 5px #00ff00;
+  transition: background-color 0.2s, box-shadow 0.2s;
 }
 
 .targetContainer {
   display: flex;
   flex-direction: column;
   width: 15%;
-  border: 2px solid white;
   align-items: center;
+  padding-top: 20px;
 }
 
 .SHOOT_THE_KOMSAI_Canvas {
@@ -93,17 +133,18 @@ body {
   border-top: 2px solid #ffffff;
   user-select: none;
   max-height: 10vh;
+  background: rgba(0,0,0,0.5);
 }
 
 .pixelify-sans-text {
   font-family: "Pixelify Sans", sans-serif;
   font-weight: 600;
   font-style: normal;
-  font-optical-sizing: auto;
   font-size: 3rem;
   max-width: 50%;
   text-align: center;
   color: white;
+  text-shadow: 2px 2px 0 #000, 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
 #gameCanvas {
