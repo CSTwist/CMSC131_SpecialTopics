@@ -30,7 +30,7 @@ public:
     //Movements
     void player_movement(int& playerX, int& playerXMovement, int screenWidth, int SHIP_WIDTH);
     void komsai_movement(vector<Komsai>& komsais, vector<Bullet>& bullets, int& score, int& playerLife, int screenHeight, int screenWidth);
-    void boss_movement(vector<BossKomsai>& erylBoss, vector<Bullet>& bullets,int& score, int& playerLife, int screenHeight, int screenWidth);
+    void boss_movement(vector<BossKomsai>& erylBoss, int& playerX, vector<Bullet>& bullets,int& score, int& playerLife, int screenHeight, int screenWidth);
     void bullet_movement(vector<Bullet>& bullets);
 
     //Komsai Generation

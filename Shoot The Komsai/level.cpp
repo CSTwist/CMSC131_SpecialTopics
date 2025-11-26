@@ -32,11 +32,11 @@ void Level::komsaiGenerator(int screenWidth, int screenHeight, vector<Komsai>& k
     if (komsaiMovement == MOVE_LEFT) {
         komsai.set_KomsaiY(rand() % (screenHeight - 500));
         komsai.set_KomsaiX(screenWidth);
-        komsai.set_KomsaiSpeed(6);
+        komsai.set_KomsaiSpeed(4);
     } else if (komsaiMovement == MOVE_RIGHT) {
         komsai.set_KomsaiY(rand() % (screenHeight - 500));
         komsai.set_KomsaiX(100);
-        komsai.set_KomsaiSpeed(6);
+        komsai.set_KomsaiSpeed(4);
     }
     else {
         komsai.set_KomsaiX(rand() % (screenWidth - 56));
@@ -58,7 +58,7 @@ void Level::komsaiGenerator(int screenWidth, int screenHeight, vector<Komsai>& k
 void Level::bossSpawner(int screenWidth, int screenHeight, vector<BossKomsai>& erylBoss){
     BossKomsai eryl;
     
-    eryl.set_BossKomsaiX(rand() % (screenWidth - 56));
+    eryl.set_BossKomsaiX(rand() % (screenWidth - 300));
     eryl.set_BossKomsaiY(0);
 
     // Random initial speeds: horizontal can be left or right, vertical small
@@ -149,17 +149,17 @@ void Level::komsai_movement(vector<Komsai>& komsais, vector<Bullet>& bullets,
     }
 }
 
-void Level::boss_movement(vector<BossKomsai>& erylBoss, vector<Bullet>& bullets,
+void Level::boss_movement(vector<BossKomsai>& erylBoss, int& playerX, vector<Bullet>& bullets,
                            int& score, int& playerLife, int screenHeight, int screenWidth) {
     for (auto it = erylBoss.begin(); it != erylBoss.end(); ) {
         it->set_BossKomsaiX(it->get_BossKomsaiX() + it->get_BossSpeedX());
         it->set_BossKomsaiY(it->get_BossKomsaiY() + it->get_BossSpeedY());
 
         
-        if (it->get_BossKomsaiX() <= 0 || it->get_BossKomsaiX() >= screenWidth - 200)
+        if (it->get_BossKomsaiX() <= 0 || it->get_BossKomsaiX() >= screenWidth - 300)
             it->set_BossSpeedX(-it->get_BossSpeedX());
 
-        if (it->get_BossKomsaiY() <= 0 || it->get_BossKomsaiY() >= screenHeight - 200)
+        if (it->get_BossKomsaiY() <= 0 || it->get_BossKomsaiY() >= screenHeight - 600)
             it->set_BossSpeedY(-it->get_BossSpeedY());
 
 
@@ -168,7 +168,7 @@ void Level::boss_movement(vector<BossKomsai>& erylBoss, vector<Bullet>& bullets,
             if (bulletIt->get_bulletY() < it->get_BossKomsaiY() + 300 &&
                 bulletIt->get_bulletY() + 16 > it->get_BossKomsaiY() &&
                 bulletIt->get_bulletX() < it->get_BossKomsaiX() + 300 &&
-                bulletIt->get_bulletX() + 8 > it->get_BossKomsaiX()) {
+                bulletIt->get_bulletX() + 8 > it->get_BossKomsaiX() && bulletIt->get_bulletType() == 0) {
 
                 bulletIt = bullets.erase(bulletIt);
                 it->decrement_BossHealth();
@@ -177,6 +177,22 @@ void Level::boss_movement(vector<BossKomsai>& erylBoss, vector<Bullet>& bullets,
                     destroyed = true;
                     score += 100;
                     break; // exit inner loop safely
+                }
+            } else if (bulletIt->get_bulletType() == Bullet::BOSS) {  // check if it's a boss bullet
+                // Check collision with player
+                constexpr int PLAYER_WIDTH = 56;   // or your SHIP_WIDTH
+                constexpr int PLAYER_HEIGHT = 56;  // adjust based on ship sprite size
+
+                int playerY = screenHeight - 80; // same as JS
+                if (bulletIt->get_bulletX() < playerX + PLAYER_WIDTH &&
+                    bulletIt->get_bulletX() + 8 > playerX &&
+                    bulletIt->get_bulletY() < playerY + PLAYER_HEIGHT &&
+                    bulletIt->get_bulletY() + 16 > playerY) {
+                    playerLife--;
+                    bulletIt = bullets.erase(bulletIt);
+                }
+                else {
+                    ++bulletIt; // only increment if no collision
                 }
             } else {
                 ++bulletIt;

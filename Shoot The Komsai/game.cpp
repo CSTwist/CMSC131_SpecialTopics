@@ -27,7 +27,8 @@ public:
 
     int moveRight();
     int moveLeft();
-    void shootBullet();
+    void shootBulletPlayer();
+    void shootBulletBoss();
     void komsaiGenerator();
     int get_score();
     int getPlayerLife() const;
@@ -75,8 +76,8 @@ void Game::update() {
     gameLevel.player_movement(playerX, playerXMovement, screenWidth, SHIP_WIDTH);
 
     //Komsai and Boss Movement
-    if (gameLevel.get_LevelNumber() == 4) {
-        gameLevel.boss_movement(erylBoss, bullets, score, playerLife, getScreenHeight(), getScreenWidth());
+    if ((gameLevel.get_LevelNumber()+1) % 2 == 0 && gameLevel.get_LevelNumber() != 0) {
+        gameLevel.boss_movement(erylBoss, playerX, bullets, score, playerLife, getScreenHeight(), getScreenWidth());
     } else {
         gameLevel.komsai_movement(komsais, bullets, score, playerLife, getScreenHeight(), getScreenWidth());
     }
@@ -108,11 +109,20 @@ int Game::moveLeft() {
     return playerXMovement;
 }
 
-void Game::shootBullet() {
+void Game::shootBulletPlayer() {
     Bullet bullet;
     bullet.set_bulletX(playerX + SHIP_WIDTH / 2);
     bullet.set_bulletY(getScreenHeight()-80);
     bullet.set_bulletSpeed(-10);
+    bullets.push_back(bullet);
+}
+
+void Game::shootBulletBoss() {
+    Bullet bullet;
+    bullet.set_bulletX(getBoss()[0].get_BossKomsaiX() + rand() % 300);
+    bullet.set_bulletY(getBoss()[0].get_BossKomsaiY() + 300);
+    bullet.set_bulletSpeed(10);
+    bullet.set_bulletType(static_cast<Bullet::BulletType>(1));
     bullets.push_back(bullet);
 }
 
@@ -121,6 +131,7 @@ void Game::komsaiGenerator() {
 }
 
 void Game::spawnBoss() {
+    erylBoss.clear();
     gameLevel.bossSpawner(screenWidth, screenHeight, erylBoss);
 }
 
@@ -160,8 +171,13 @@ extern "C" {
     }
 
     EMSCRIPTEN_KEEPALIVE
-    void shoot_bullet() {
-        Game::instance().shootBullet();
+    void shoot_bullet_player() {
+        Game::instance().shootBulletPlayer();
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void shoot_bullet_boss() {
+        Game::instance().shootBulletBoss();
     }
 
     EMSCRIPTEN_KEEPALIVE

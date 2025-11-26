@@ -164,7 +164,7 @@ window.startGame = function () {
         const getX = Module.cwrap("get_x", "number", []);
         const right_movement = Module.cwrap("right_movement", null, []);
         const left_movement = Module.cwrap("left_movement", null, []);
-        const shoot_bullet = Module.cwrap("shoot_bullet", null, []);
+        const shoot_bullet = Module.cwrap("shoot_bullet_player", null, []);
         const bullet_count = Module.cwrap("get_bullet_count", "number", []);
         const komsai_count = Module.cwrap("get_komsai_count", "number", []);
         const generate_komsai = Module.cwrap("generate_komsai", null, []);
@@ -225,7 +225,10 @@ window.startGame = function () {
         }
 
         let lastKomsaiSpawn = 0;
-        const SPAWN_COOLDOWN = 1500; // From 2nd version
+        const SPAWN_COOLDOWN = 1500; 
+
+        let lastBossShoot = 0;
+        const BOSS_SHOOT_COOLDOWN = 500;
 
         let loadedCount = 0;
         komsaiImages.forEach(img => {
@@ -431,7 +434,7 @@ window.startGame = function () {
             ctx.shadowColor = "cyan";
 
             if (currentLife <= 2) {
-                ctx.fillStyle = rgba(255, 0, 0, `${Math.random() * 0.5 + 0.5}`); 
+                ctx.fillStyle = `rgba(255, 0, 0, ${Math.random() * 0.5 + 0.5})`; 
                 ctx.shadowColor = "red";
             } else {
                 ctx.fillStyle = '#e0ffff';
@@ -490,7 +493,30 @@ window.startGame = function () {
             
             const internalLevel = get_game_level(); 
             
-            if (internalLevel !== 4) { 
+            if ((internalLevel+1) % 2 == 0 && internalLevel > 0) {
+                // BOSS LEVEL (Level 2)
+                if (!bossSpawned) {  
+                    spawnBoss();
+                    bossSpawned = true;
+                }
+
+                // BOSS SHOOT COOLDOWN LOGIC
+                const now = Date.now();
+                if (bossSpawned && now - lastBossShoot >= BOSS_SHOOT_COOLDOWN) {
+                        Module._shoot_bullet_boss();
+                    lastBossShoot = now;
+                }
+
+                // Assuming WASM has _get_boss_x/y exposed
+                if (Module._get_boss_x && Module._get_boss_health != 0) {
+                    const x = Module._get_boss_x(0);
+                    const y = Module._get_boss_y(0);
+                    ctx.drawImage(bossImg, x, y, 300, 300);
+                }
+                else if (Module._get_boss_health == 0){
+                    bossSpawned = false;
+                }
+            } else {
                 // NORMAL LEVELS
                 spawnKomsai();
                 for (let i = 0; i < komsai_count(); i++) {
@@ -501,21 +527,6 @@ window.startGame = function () {
                     const randomImg = shuffledImages[type]; // Use shuffled images
                     
                     ctx.drawImage(randomImg, x, y, 100, 100);
-                }
-            } else {
-                // BOSS LEVEL (Level 2)
-                if (!bossSpawned) {  
-                    spawnBoss();
-                    bossSpawned = true;
-                }
-                // Assuming WASM has _get_boss_x/y exposed
-                if (Module._get_boss_x && Module._get_boss_health != 0) {
-                    const x = Module._get_boss_x(0);
-                    const y = Module._get_boss_y(0);
-                    ctx.drawImage(bossImg, x, y, 300, 300);
-                }
-                else if (Module._get_boss_health == 0){
-                    bossSpawned = false;
                 }
             }
 
