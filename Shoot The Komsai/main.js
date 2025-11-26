@@ -4,7 +4,7 @@
     const ctx = canvas.getContext("2d");
     let width, height;
     const stars = [];
-    const numStars = 150; 
+    const numStars = 150;
 
     function resize() {
         width = window.innerWidth;
@@ -46,17 +46,24 @@ window.startGame = function () {
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
     // --- SFX SETUP ---
     const sfxExplosion = new Audio("assets/music/boom2.wav");
     const sfxDamage = new Audio("assets/music/boom11.wav");
     const sfxHeal = new Audio("assets/music/sound3.wav");
-    const sfxAlarm = new Audio("assets/music/alarm sound.mp3"); // Ensure this matches your filename
+    const sfxAlarm = new Audio("assets/music/alarm sound.mp3");
     const startSound = new Audio("assets/music/shoot_sound.mp3");
     const bgMusic = document.getElementById("bgMusic");
-    
-    sfxAlarm.loop = true; 
-    sfxAlarm.volume = 0.5; 
-    sfxExplosion.volume = 0.6; 
+
+    sfxAlarm.loop = true;
+    sfxAlarm.volume = 0.5;
+    sfxExplosion.volume = 0.6;
     sfxDamage.volume = 0.8;
     sfxHeal.volume = 0.8;
     startSound.volume = 1;
@@ -69,9 +76,9 @@ window.startGame = function () {
             this.y = y;
             this.text = text;
             this.color = color;
-            this.velocity = -2; 
+            this.velocity = -2;
             this.alpha = 1;
-            this.life = 50; 
+            this.life = 50;
         }
         update() {
             this.y += this.velocity;
@@ -82,7 +89,7 @@ window.startGame = function () {
             ctx.save();
             ctx.globalAlpha = Math.max(0, this.alpha);
             ctx.fillStyle = this.color;
-            ctx.font = "60px 'Pixelify Sans'"; 
+            ctx.font = "60px 'Pixelify Sans'";
             ctx.shadowColor = this.color;
             ctx.shadowBlur = 5;
             ctx.fillText(this.text, this.x, this.y);
@@ -121,15 +128,8 @@ window.startGame = function () {
         }
     }
 
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
-
     let isPaused = false;
-    let previousLife = 5; 
+    let previousLife = 5;
     let previousScore = 0;
     
     // Level & Boss State
@@ -145,7 +145,7 @@ window.startGame = function () {
             return;
         }
 
-        const update = Module.cwrap("update", null, ["number"]); // Accepts dt
+        const update = Module.cwrap("update", null, ["number"]);
         const getX = Module.cwrap("get_x", "number", []);
         const right_movement = Module.cwrap("right_movement", null, []);
         const left_movement = Module.cwrap("left_movement", null, []);
@@ -186,8 +186,7 @@ window.startGame = function () {
             "assets/images/Hew2.png",
             "assets/images/Soph.png",
             "assets/images/RJ.png",
-            "assets/images/Christian.png",
-            "assets/images/Salmon.png"
+            "assets/images/Christian.png"
         ];
         const komsaiImages = images.map(src => {
             const img = new Image();
@@ -342,7 +341,7 @@ window.startGame = function () {
                 const levelTextEl = document.getElementById("levelText");
                 const currentLevelSpan = document.getElementById("currentLevel");
                 
-                currentLevelSpan.innerText = currentLevel;
+                if(currentLevelSpan) currentLevelSpan.innerText = currentLevel;
                 if(levelTextEl) {
                     levelTextEl.classList.remove("level-anim");
                     void levelTextEl.offsetWidth; 
@@ -415,7 +414,7 @@ window.startGame = function () {
 
             // --- ALARM LOGIC ---
             if (currentLife > 0 && currentLife <= 2) {
-                if (sfxAlarm.paused && !isMuted) {
+                if (sfxAlarm.paused) {
                     sfxAlarm.currentTime = 0; 
                     sfxAlarm.play().catch(e => {});
                 }
@@ -540,8 +539,10 @@ window.startGame = function () {
                 sessionStorage.setItem("highScore", "0");
             }
 
-            document.getElementById("scoreValue").innerText = `${get_score()}`;
-            document.getElementById("highScoreValue").innerText = `${sessionStorage.getItem("highScore") || 0}`;
+            const scoreEl = document.getElementById("scoreValue");
+            const highScoreEl = document.getElementById("highScoreValue");
+            if(scoreEl) scoreEl.innerText = `${get_score()}`;
+            if(highScoreEl) highScoreEl.innerText = `${sessionStorage.getItem("highScore") || 0}`;
             
             updateLifeBoxes(currentLife);
 
@@ -567,7 +568,7 @@ window.startGame = function () {
                 }
 
                 if (get_score() > parseInt(sessionStorage.getItem("highScore") || "0")) {
-                    document.getElementById("highScoreValue").innerText = `${get_score()}`;
+                    if(highScoreEl) highScoreEl.innerText = `${get_score()}`;
                     sessionStorage.setItem("highScore", get_score());
                 }
                 return;
