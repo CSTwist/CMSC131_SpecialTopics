@@ -1,15 +1,15 @@
 #include "bullet.h"
 
-Bullet::Bullet() : bulletY(0), bulletX(0), bulletSpeed(0), bulletType(PLAYER) {}
+Bullet::Bullet() : bulletY(0.0f), bulletX(0.0f), bulletSpeed(0.0f), bulletType(PLAYER) {}
 
 //Getter Implementations
 int Bullet::get_bulletY() const{
-    return bulletY;
+    return static_cast<int>(bulletY);
 }
 int Bullet::get_bulletX() const{
-    return bulletX;
+    return static_cast<int>(bulletX);
 }
-int Bullet::get_bulletSpeed() const{
+float Bullet::get_bulletSpeed() const{
     return bulletSpeed;
 }
 
@@ -18,13 +18,13 @@ int Bullet::get_bulletType() const{
 }
 
 //Setter Implementations
-void Bullet::set_bulletY(int y) {
+void Bullet::set_bulletY(float y) {
     bulletY = y;
 }
-void Bullet::set_bulletX(int x) {
+void Bullet::set_bulletX(float x) {
     bulletX = x;
 }
-void Bullet::set_bulletSpeed(int speed) {
+void Bullet::set_bulletSpeed(float speed) {
     bulletSpeed = speed;
 }
 void Bullet::set_bulletType(BulletType type){

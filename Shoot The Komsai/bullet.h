@@ -12,23 +12,23 @@ public:
     };
 
     //Methods
-    //Getters
+    //Getters - return int for rendering compatibility
     int get_bulletY() const;
     int get_bulletX() const;
-    int get_bulletSpeed() const;
+    float get_bulletSpeed() const;
     int get_bulletType() const;
 
     //Setters
-    void set_bulletY(int y);
-    void set_bulletX(int x);
-    void set_bulletSpeed(int speed);
+    void set_bulletY(float y);
+    void set_bulletX(float x);
+    void set_bulletSpeed(float speed);
     void set_bulletType(BulletType type);
 
 private:
     //Attributes
-    int bulletY;
-    int bulletX;
-    int bulletSpeed;
+    float bulletY;
+    float bulletX;
+    float bulletSpeed;
     BulletType bulletType;
 };
 

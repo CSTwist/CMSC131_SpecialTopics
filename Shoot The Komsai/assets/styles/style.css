@@ -15,6 +15,104 @@ body {
   user-select: none;
 }
 
+/* --- SHAKE VARIATIONS --- */
+@keyframes shakeSmall {
+  0% { transform: translate(0,0); }
+  25% { transform: translate(-2px,2px); }
+  50% { transform: translate(2px,-2px); }
+  75% { transform: translate(-2px,0px); }
+  100% { transform: translate(0,0); }
+}
+
+@keyframes shakeMedium {
+  0% { transform: translate(0,0); }
+  10% { transform: translate(-5px, -5px); }
+  30% { transform: translate(5px, 5px); }
+  50% { transform: translate(-5px, 5px); }
+  70% { transform: translate(5px, -5px); }
+  90% { transform: translate(-2px, 2px); }
+  100% { transform: translate(0,0); }
+}
+
+@keyframes shakeLarge {
+  0% { transform: translate(0,0); }
+  10% { transform: translate(-10px, -10px) rotate(-2deg); }
+  30% { transform: translate(10px, 10px) rotate(2deg); }
+  50% { transform: translate(-10px, 10px) rotate(-2deg); }
+  70% { transform: translate(10px, -10px) rotate(2deg); }
+  90% { transform: translate(-5px, 5px) rotate(0deg); }
+  100% { transform: translate(0,0); }
+}
+
+.shake-small { animation: shakeSmall 0.2s ease-out; }
+.shake-medium { animation: shakeMedium 0.4s ease-out; }
+.shake-large { animation: shakeLarge 0.6s ease-out; }
+
+/* --- CRITICAL HEALTH VIGNETTE --- */
+.critical-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  box-shadow: inset 0 0 100px rgba(255, 0, 0, 0.8);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+  transition: opacity 0.5s ease;
+}
+
+.critical-overlay.active {
+  opacity: 1;
+  animation: pulseRed 1s infinite;
+}
+
+@keyframes pulseRed {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+/* --- BOSS HEALTH HUD --- */
+#boss-hud {
+  position: absolute;
+  top: 60px; 
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 50%;
+  z-index: 10;
+}
+
+.boss-label {
+  color: #ff0000;
+  font-size: 1.5rem;
+  text-shadow: 0 0 10px red;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.boss-bar-container {
+  width: 100%;
+  height: 20px;
+  border: 2px solid #ff0000;
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.boss-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff3333, #ff0000);
+  width: 100%;
+  transition: width 0.2s ease-out;
+  box-shadow: 0 0 10px red;
+}
+
+/* --- GAME LAYOUT --- */
 .game-screen {
   display: none;
   flex-direction: row;
@@ -26,7 +124,7 @@ body {
 .scoreContainer {
   display: flex;
   flex-direction: column;
-  width: 15%;
+  width: 15%; 
   margin-right: 0px;
   align-items: center;
   padding-top: 20px;
@@ -51,7 +149,7 @@ body {
 .targetBox img, .healBox img {
     border-radius: 50%;
     margin: 10px 0;
-    border: 3px solid;
+    border: 3px solid; 
     box-shadow: 0 0 10px rgba(0,0,0,0.5);
     width: 80px;
     height: 80px;
@@ -81,16 +179,17 @@ body {
 
 #levelText {
   position: absolute;
+  color: white;
+  font-size: 6rem; 
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: cyan;
-  font-size: 6rem;
   text-shadow: 0 0 20px cyan, 4px 4px 0px #000;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 100;
+  opacity: 0; 
+  pointer-events: none; 
+  z-index: 100; 
   white-space: nowrap;
+  text-align: center;
 }
 
 .level-anim {
@@ -99,10 +198,10 @@ body {
 
 @keyframes levelFlash {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-  10% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-  20% { transform: translate(-50%, -50%) scale(1); }
-  80% { opacity: 1; }
-  100% { opacity: 0; }
+  10% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 
+  20% { transform: translate(-50%, -50%) scale(1); } 
+  80% { opacity: 1; } 
+  100% { opacity: 0; } 
 }
 
 .lifeBox {

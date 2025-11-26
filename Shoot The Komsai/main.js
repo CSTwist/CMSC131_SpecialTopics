@@ -69,22 +69,6 @@ window.startGame = function () {
     startSound.volume = 1;
     if(bgMusic) bgMusic.volume = 0.3;
 
-    // --- MUTE BUTTON LOGIC ---
-    let isMuted = false;
-    const muteBtn = document.getElementById("muteBtn");
-    if(muteBtn) {
-        muteBtn.addEventListener("click", () => {
-            isMuted = !isMuted;
-            
-            const allAudio = [bgMusic, startSound, sfxExplosion, sfxDamage, sfxHeal, sfxAlarm];
-            allAudio.forEach(audio => {
-                if(audio) audio.muted = isMuted;
-            });
-
-            muteBtn.innerText = isMuted ? "🔇" : "🔊";
-        });
-    }
-
     // --- FLOATING TEXT CLASS ---
     class FloatingText {
         constructor(x, y, text, color) {
@@ -153,6 +137,7 @@ window.startGame = function () {
     let levelStartTime = 0;
     let bossSpawned = false;
     let lastShuffledLevel = 0;
+    const BOSS_MAX_HP = 20; // Based on C++ code
 
     function initWhenModuleReady() {
         if (!Module || !Module.calledRun) {
@@ -160,11 +145,12 @@ window.startGame = function () {
             return;
         }
 
-        const update = Module.cwrap("update", null, []);
+        const update = Module.cwrap("update", null, ["number"]);
         const getX = Module.cwrap("get_x", "number", []);
         const right_movement = Module.cwrap("right_movement", null, []);
         const left_movement = Module.cwrap("left_movement", null, []);
         const shoot_bullet = Module.cwrap("shoot_bullet_player", null, []);
+        const shoot_bullet_boss = Module.cwrap("shoot_bullet_boss", null, []);
         const bullet_count = Module.cwrap("get_bullet_count", "number", []);
         const komsai_count = Module.cwrap("get_komsai_count", "number", []);
         const generate_komsai = Module.cwrap("generate_komsai", null, []);
@@ -172,7 +158,10 @@ window.startGame = function () {
         const get_score = Module.cwrap("get_score", "number", []);
         const get_player_life = Module.cwrap("get_player_life", "number", []);
         const get_game_level = Module.cwrap("get_game_level", "number", []);
-        const spawnBoss = Module.cwrap("spawn_boss", null, []); // Imported from 2nd version
+        const spawnBoss = Module.cwrap("spawn_boss", null, []);
+        const get_boss_x = Module.cwrap("get_boss_x", "number", ["number"]);
+        const get_boss_y = Module.cwrap("get_boss_y", "number", ["number"]);
+        const get_boss_health = Module.cwrap("get_boss_health", "number", ["number"]);
 
         const scale = 8;
         const shipPattern = [
@@ -217,7 +206,6 @@ window.startGame = function () {
         function updateKomsais() {
             const targetKomsai = document.getElementById("targetImage");
             const healingKomsai = document.getElementById("healingImage");
-            // Assuming TARGET = 1, HEALER = 0 from original logic
             if(targetKomsai && healingKomsai) {
                 targetKomsai.src = shuffledImages[1].src;
                 healingKomsai.src = shuffledImages[0].src;
@@ -236,7 +224,7 @@ window.startGame = function () {
                 loadedCount++;
                 if (loadedCount === komsaiImages.length) {
                     if(bgMusic) bgMusic.play().catch(e => console.log("Audio pending interaction"));
-                    loop(); 
+                    loop(0); 
                 }
             }
         });
@@ -256,6 +244,7 @@ window.startGame = function () {
                     if(!sfxAlarm.paused) sfxAlarm.pause();
                 } else {
                     if(pauseMenu) pauseMenu.style.display = 'none';
+                    lastTime = performance.now();
                     requestAnimationFrame(loop); 
                 }
             }
@@ -317,25 +306,30 @@ window.startGame = function () {
             return list;
         }
 
-        function loop() {
-            if (isPaused) {
-                return; // Rendering paused handled by key listener above
-            } else {
-                const currentLife = get_player_life();
-                if(currentLife > 0 && currentLife <= 2 && sfxAlarm.paused && !isMuted) {
-                    sfxAlarm.play().catch(e => {});
-                }
+        let lastTime = 0;
+
+        function loop(timestamp) {
+            if (isPaused) return;
+
+            // --- DELTA TIME CALCULATION ---
+            if (!lastTime) lastTime = timestamp;
+            const dt = (timestamp - lastTime) / 16.6667;
+            lastTime = timestamp;
+            const safeDt = Math.min(dt, 4.0); 
+
+            const currentLife = get_player_life();
+            if(currentLife > 0 && currentLife <= 2 && sfxAlarm.paused) {
+                sfxAlarm.play().catch(e => {});
             }
             
             handleInput();
 
             const enemiesBefore = getEnemiesList();
-            update(); // WASM Update
+            update(safeDt); 
             const enemiesAfter = getEnemiesList();
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            const currentLife = get_player_life();
             const currentScore = get_score();
             const currentLevel = get_game_level() + 1; 
 
@@ -344,18 +338,16 @@ window.startGame = function () {
                 lastKnownLevel = currentLevel;
                 levelStartTime = Date.now(); 
                 
-                // Show level text
                 const levelTextEl = document.getElementById("levelText");
                 const currentLevelSpan = document.getElementById("currentLevel");
                 
-                currentLevelSpan.innerText = currentLevel;
+                if(currentLevelSpan) currentLevelSpan.innerText = currentLevel;
                 if(levelTextEl) {
                     levelTextEl.classList.remove("level-anim");
                     void levelTextEl.offsetWidth; 
                     levelTextEl.classList.add("level-anim");
                 }
 
-                // Shuffle images logic (from 2nd version)
                 if (currentLevel - lastShuffledLevel >= 1) {
                     shuffleKomsaiImages();
                     updateKomsais();
@@ -391,23 +383,21 @@ window.startGame = function () {
                     spawnY = 150;
                 }
                 
-                floatingTexts.push(new FloatingText(spawnX, spawnY, +`${diff}`, "#ffff00"));
+                floatingTexts.push(new FloatingText(spawnX, spawnY, `+${diff}`, "#ffff00"));
                 previousScore = currentScore;
             }
 
             // --- HEALTH EVENT DETECTION ---
+            const vignette = document.querySelector('.critical-overlay');
             if (currentLife !== previousLife) {
                 if (currentLife < previousLife) {
                     document.body.classList.add("shake-effect");
                     setTimeout(() => document.body.classList.remove("shake-effect"), 500);
-                    
                     sfxDamage.currentTime = 0;
                     sfxDamage.play();
-
                     const sX = getX();
                     const sY = canvas.height - 80;
                     createExplosion(sX + 20, sY + 20, "red");
-
                 } else if (currentLife > previousLife) {
                     sfxHeal.currentTime = 0;
                     sfxHeal.play();
@@ -415,9 +405,16 @@ window.startGame = function () {
                 previousLife = currentLife;
             }
 
+            // Update Vignette Visuals
+            if (currentLife <= 2 && currentLife > 0) {
+                if(vignette) vignette.classList.add('active');
+            } else {
+                if(vignette) vignette.classList.remove('active');
+            }
+
             // --- ALARM LOGIC ---
             if (currentLife > 0 && currentLife <= 2) {
-                if (sfxAlarm.paused && !isMuted) {
+                if (sfxAlarm.paused) {
                     sfxAlarm.currentTime = 0; 
                     sfxAlarm.play().catch(e => {});
                 }
@@ -462,7 +459,7 @@ window.startGame = function () {
                 if (ft.life <= 0) floatingTexts.splice(index, 1);
             });
 
-            // --- RENDER: BULLETS (LASER STYLE) ---
+            // --- RENDER: BULLETS ---
             ctx.save();
             ctx.shadowBlur = 10;
             ctx.shadowColor = "#ffff00"; 
@@ -473,7 +470,6 @@ window.startGame = function () {
             for (let i = 0; i < bullet_count(); i++) {
                 const x = Module._get_bullet_x(i);
                 const y = Module._get_bullet_y(i);
-                
                 ctx.beginPath();
                 ctx.moveTo(x + 4, y); 
                 ctx.lineTo(x + 4, y + 20); 
@@ -482,51 +478,55 @@ window.startGame = function () {
             ctx.restore();
 
             // --- RENDER: ENEMIES / BOSS ---
-            // Logic: If Level 1 (or whatever level condition you want for Boss), show Boss.
-            // Otherwise show normal Komsai.
-            // Note: 'get_game_level' returns 0-based level (0 = Level 1).
-            
-            // The 2nd version had a check: if (get_game_level() != 1) -> spawn normal
-            // else -> spawn boss. 
-            // Since 'get_game_level' usually starts at 0, Level 2 would be index 1.
-            // Adjust logic below if you want boss at a different level.
-            
             const internalLevel = get_game_level(); 
             
             if ((internalLevel+1) % 3 == 0 && internalLevel > 0) {
-                // BOSS LEVEL (Level 2)
+                // BOSS LEVEL
                 if (!bossSpawned) {  
-                    spawnBoss();
-                    bossSpawned = true;
+                    // Wait for level text (3s) before spawning Boss
+                    if (Date.now() - levelStartTime > 3000) {
+                        spawnBoss();
+                        bossSpawned = true;
+                        const bossHud = document.getElementById("boss-hud");
+                        if(bossHud) bossHud.style.display = "flex";
+                    }
                 }
 
-                // BOSS SHOOT COOLDOWN LOGIC
-                const now = Date.now();
-                if (bossSpawned && now - lastBossShoot >= BOSS_SHOOT_COOLDOWN) {
-                        Module._shoot_bullet_boss();
-                    lastBossShoot = now;
-                }
+                // Boss Actions
+                if (bossSpawned) {
+                    const now = Date.now();
+                    if (now - lastBossShoot >= BOSS_SHOOT_COOLDOWN) {
+                        shoot_bullet_boss();
+                        lastBossShoot = now;
+                    }
 
-                // Assuming WASM has _get_boss_x/y exposed
-                if (Module._get_boss_x && Module._get_boss_health != 0) {
-                    const x = Module._get_boss_x(0);
-                    const y = Module._get_boss_y(0);
-                    ctx.drawImage(bossImg, x, y, 200, 200);
-                }
-                else if (Module._get_boss_health == 0){
-                    bossSpawned = false;
+                    const currentBossHP = get_boss_health(0);
+                    const hpPercent = Math.max(0, (currentBossHP / 20) * 100);
+                    const bossFill = document.getElementById("boss-health-fill");
+                    if(bossFill) bossFill.style.width = `${hpPercent}%`;
+
+                    if (currentBossHP > 0) {
+                        const x = get_boss_x(0);
+                        const y = get_boss_y(0);
+                        ctx.drawImage(bossImg, x, y, 200, 200);
+                    } else {
+                        bossSpawned = false;
+                        const bossHud = document.getElementById("boss-hud");
+                        if(bossHud) bossHud.style.display = "none";
+                    }
                 }
             } else {
                 // NORMAL LEVELS
                 bossSpawned = false;
+                const bossHud = document.getElementById("boss-hud");
+                if(bossHud) bossHud.style.display = "none";
+
                 spawnKomsai();
                 for (let i = 0; i < komsai_count(); i++) {
                     const x = Module._get_komsai_x(i);
                     const y = Module._get_komsai_y(i);
-
                     const type = get_komsai_type(i);
-                    const randomImg = shuffledImages[type]; // Use shuffled images
-                    
+                    const randomImg = shuffledImages[type];
                     ctx.drawImage(randomImg, x, y, 100, 100);
                 }
             }
@@ -539,16 +539,17 @@ window.startGame = function () {
                 sessionStorage.setItem("highScore", "0");
             }
 
-            document.getElementById("scoreValue").innerText = `${get_score()}`;
-            document.getElementById("highScoreValue").innerText = `${sessionStorage.getItem("highScore") || 0}`;
+            const scoreEl = document.getElementById("scoreValue");
+            const highScoreEl = document.getElementById("highScoreValue");
+            if(scoreEl) scoreEl.innerText = `${get_score()}`;
+            if(highScoreEl) highScoreEl.innerText = `${sessionStorage.getItem("highScore") || 0}`;
             
             updateLifeBoxes(currentLife);
 
             // --- GAME OVER ---
             if (currentLife <= 0 ) {
-                if(!sfxAlarm.paused) {
-                    sfxAlarm.pause();
-                }
+                if(!sfxAlarm.paused) sfxAlarm.pause();
+                if(vignette) vignette.classList.remove('active');
 
                 sfxExplosion.currentTime = 0;
                 sfxExplosion.play();
@@ -567,7 +568,7 @@ window.startGame = function () {
                 }
 
                 if (get_score() > parseInt(sessionStorage.getItem("highScore") || "0")) {
-                    document.getElementById("highScoreValue").innerText = `${get_score()}`;
+                    if(highScoreEl) highScoreEl.innerText = `${get_score()}`;
                     sessionStorage.setItem("highScore", get_score());
                 }
                 return;

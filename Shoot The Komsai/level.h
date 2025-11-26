@@ -1,46 +1,40 @@
 #ifndef LEVEL_H
 #define LEVEL_H
-#include <iostream>
+
 #include <vector>
-#include "bullet.h"
 #include "komsai.h"
+#include "bullet.h"
 #include "bossKomsai.h"
+
 using namespace std;
 
-class Level{
+class Level {
 public:
-    //Constructor
-    Level();
-
-    enum KomsaiMovement{
-        MOVE_DOWN,
+    enum KomsaiMovement {
         MOVE_LEFT,
         MOVE_RIGHT,
+        MOVE_DOWN
     };
 
-    //Methods
-    //Getters
+    Level();
+
+    // Getters and Setters
     int get_LevelNumber() const;
     int get_KomsaiMovement() const;
-
-    //Setters
     void set_LevelNumber(int currentLevel);
     void set_KomsaiMovement(KomsaiMovement movement);
 
-    //Movements
-    void player_movement(int& playerX, int& playerXMovement, int screenWidth, int SHIP_WIDTH);
-    void komsai_movement(vector<Komsai>& komsais, vector<Bullet>& bullets, int& score, int& playerLife, int screenHeight, int screenWidth);
-    void boss_movement(vector<BossKomsai>& erylBoss, int& playerX, vector<Bullet>& bullets,int& score, int& playerLife, int screenHeight, int screenWidth);
-    void bullet_movement(vector<Bullet>& bullets);
-
-    //Komsai Generation
-    void komsaiGenerator(int screenWidth, int screenHeight,vector<Komsai>& komsais);
-
-    //Boss Spawning
+    // Logic
+    void komsaiGenerator(int screenWidth, int screenHeight, vector<Komsai>& komsais);
     void bossSpawner(int screenWidth, int screenHeight, vector<BossKomsai>& erylBoss);
 
+    // Movement (Now with Delta Time)
+    void player_movement(float& playerX, float& playerXMovement, int screenWidth, int SHIP_WIDTH, float dt);
+    void komsai_movement(vector<Komsai>& komsais, vector<Bullet>& bullets, int& score, int& playerLife, int screenHeight, int screenWidth, float dt);
+    void boss_movement(vector<BossKomsai>& erylBoss, float& playerX, vector<Bullet>& bullets, int& score, int& playerLife, int screenHeight, int screenWidth, float dt);
+    void bullet_movement(vector<Bullet>& bullets, float dt);
+
 private:
-    //Attributes
     int levelNumber;
     KomsaiMovement komsaiMovement;
 };

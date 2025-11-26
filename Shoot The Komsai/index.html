@@ -40,6 +40,8 @@
 
   <canvas id="starfieldCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none;"></canvas>
 
+  <div class="critical-overlay"></div>
+
   <div id="main-menu" style="
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     position:absolute; width:100%; height:100%; color:white;
@@ -61,13 +63,23 @@
     <h2 style="font-size:60px; margin-bottom:40px; color: #00ffcc;">How to Play</h2>
     <ol style="font-size:28px; line-height:1.8; text-align:left; max-width:80%;">
       <li>The player controls a spaceship that moves horizontally along the bottom of the screen.</li>
-      <li><strong>CONTROLS:</strong> ← Left, → Right, Spacebar to shoot, P to pause and Enter to restart when you lose the game.</li>
-      <li>The spaceship has a life bar (5 lives or more).</li>
+      <li><strong>CONTROLS:</strong> ← Left, → Right, Spacebar to shoot, P to pause and Enter to restart the game when you lose.</li>
+      <li>The spaceship has a life bar (5 lives).</li>
       <li>Two frames appear at the top left: one shows the target item to shoot, the other shows a healing item.</li>
       <li>Shoot target items before they reach the bottom, or you lose 1 life per item missed.</li>
       <li>Items are the faces of Komsai faculties or students.</li>
     </ol>
     <p style="margin-top:40px; font-size:32px; animation: blink 1s step-start infinite; color: #00ffcc;">Press Enter to start the game</p>
+  </div>
+
+  <div id="pause-menu" style="
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    position:absolute; width:100%; height:100%; background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px);
+    color:white; z-index:50; font-family:'Pixelify Sans', sans-serif;
+  ">
+    <h1 style="font-size:80px; color:white; text-shadow: 0 0 20px white;">PAUSED</h1>
+    <p style="font-size:24px; margin-top:20px; color:#00ffcc;">PRESS 'P' TO RESUME</p>
   </div>
 
   <div class="game-screen" style="display:none;" id="game-screen">
@@ -83,6 +95,13 @@
     </div>
 
     <div class="gameContainer">
+      <div id="boss-hud" style="display:none;">
+        <span class="boss-label">BOSS HEALTH</span>
+        <div class="boss-bar-container">
+          <div id="boss-health-fill" class="boss-bar-fill"></div>
+        </div>
+      </div>
+
       <div class="lifeContainer">
         <div class="lifeBox"></div>
         <div class="lifeBox"></div>
