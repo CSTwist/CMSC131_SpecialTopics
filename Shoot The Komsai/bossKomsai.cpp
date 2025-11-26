@@ -1,7 +1,7 @@
 #include "bossKomsai.h"
 
 // Constructor
-BossKomsai::BossKomsai() : bossKomsaiX(0), bossKomsaiY(0), speedX(3), speedY(2), bossHealth(20){}
+BossKomsai::BossKomsai() : bossKomsaiX(0), bossKomsaiY(0), speedX(3), speedY(2), bossHealth(10){}
 
 // Getter Implementations
 int BossKomsai::get_BossKomsaiX() const {
