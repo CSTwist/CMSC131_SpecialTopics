@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>WASM Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <link rel="stylesheet" href="assets/styles/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,10 +16,16 @@
 
     @keyframes shakeScale {
       0% { transform: scale(1) translate(0,0); }
-      25% { transform: scale(1.03) translate(-1px,1px); }
-      50% { transform: scale(0.97) translate(1px,-1px); }
-      75% { transform: scale(1.02) translate(-1px,0px); }
+      10% { transform: scale(1.02) translate(-5px, -5px); }
+      30% { transform: scale(1.02) translate(5px, 5px); }
+      50% { transform: scale(1.02) translate(-5px, 5px); }
+      70% { transform: scale(1.02) translate(5px, -5px); }
+      90% { transform: scale(1.02) translate(-2px, 2px); }
       100% { transform: scale(1) translate(0,0); }
+    }
+
+    .shake-effect {
+        animation: shakeScale 0.5s ease-out;
     }
 
     .pixelify-sans-text { font-family: 'Pixelify Sans', sans-serif; }
@@ -26,6 +34,10 @@
 </head>
 <body>
 
+  <audio id="bgMusic" loop>
+    <source src="assets/music/bgm.mp3" type="audio/mpeg">
+  </audio>
+
   <canvas id="starfieldCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none;"></canvas>
 
   <div id="main-menu" style="
@@ -33,7 +45,7 @@
     position:absolute; width:100%; height:100%; color:white;
     z-index:10; text-align:center; opacity:0; animation:fadeIn 1.5s forwards;
   ">
-    <h1 class="pixelify-sans-text main-title" style="font-size:80px; animation: fadeSlideUp 1.5s;">SHOOT THE KOMSAI</h1>
+    <h1 class="pixelify-sans-text main-title" style="font-size:80px; animation: fadeSlideUp 1.5s; text-shadow: 0 0 20px cyan;">SHOOT THE KOMSAI</h1>
     <p id="press-start" style="
       font-size:32px; margin-top:40px; color:white;
       animation: blink 1s step-start infinite;
@@ -42,19 +54,20 @@
 
   <div id="instructions-screen" style="
     display:none; flex-direction:column; align-items:center; justify-content:center;
-    position:absolute; width:100%; height:100%; background: rgba(0,0,0,0.3);
+    position:absolute; width:100%; height:100%; background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(10px);
     color:white; z-index:20; font-family:'Pixelify Sans', sans-serif; animation:fadeSlideUp 1s forwards;
   ">
-    <h2 style="font-size:60px; margin-bottom:40px;">How to Play</h2>
+    <h2 style="font-size:60px; margin-bottom:40px; color: #00ffcc;">How to Play</h2>
     <ol style="font-size:28px; line-height:1.8; text-align:left; max-width:80%;">
       <li>The player controls a spaceship that moves horizontally along the bottom of the screen.</li>
-      <li><strong>CONTROLS:</strong> ← Left, → Right, Spacebar to shoot.</li>
+      <li><strong>CONTROLS:</strong> ← Left, → Right, Spacebar to shoot, P to pause and Enter to restart when you lose the game.</li>
       <li>The spaceship has a life bar (5 lives or more).</li>
       <li>Two frames appear at the top left: one shows the target item to shoot, the other shows a healing item.</li>
       <li>Shoot target items before they reach the bottom, or you lose 1 life per item missed.</li>
       <li>Items are the faces of Komsai faculties or students.</li>
     </ol>
-    <p style="margin-top:40px; font-size:32px; animation: blink 1s step-start infinite;">Press Enter to start the game</p>
+    <p style="margin-top:40px; font-size:32px; animation: blink 1s step-start infinite; color: #00ffcc;">Press Enter to start the game</p>
   </div>
 
   <div class="game-screen" style="display:none;" id="game-screen">
@@ -68,6 +81,7 @@
         <p><span id="scoreValue">0</span></p>
       </div>
     </div>
+
     <div class="gameContainer">
       <div class="lifeContainer">
         <div class="lifeBox"></div>
@@ -77,11 +91,14 @@
         <div class="lifeBox"></div>
       </div>
       <p id="levelText">LEVEL <span id="currentLevel">1</span></p>
-      <canvas id="gameCanvas" width="1200" height="600"></canvas>
+
+      <canvas id="gameCanvas"></canvas>
+
       <div class="SHOOT_THE_KOMSAI_Canvas" style="display:none;">
         <p class="pixelify-sans-text">SHOOT THE KOMSAI</p>
       </div>
     </div>
+
     <div class="targetContainer">
       <div class="targetBox">
         <p>TARGET KOMSAI</p>
@@ -98,10 +115,11 @@
     display:none; flex-direction:column; align-items:center; justify-content:center;
     position:absolute; width:100%; height:100%; color:white;
     z-index:10; text-align:center; opacity:0; animation:fadeIn 1.5s forwards;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
   ">
-    <h1 class="pixelify-sans-text main-title" style="font-size:80px; animation: fadeSlideUp 1.5s;">GAME OVER</h1>
+    <h1 class="pixelify-sans-text main-title" style="font-size:80px; animation: fadeSlideUp 1.5s; color: red; text-shadow: 0 0 20px red;">GAME OVER</h1>
   </div>
-  
+
   <script src="game.js"></script>
   <script src="main.js"></script>
   <script src="assets/scripts/menu&instructions.js"></script>

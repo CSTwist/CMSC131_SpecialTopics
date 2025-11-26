@@ -4,6 +4,7 @@
 #include "bullet.h"
 #include "komsai.h"
 #include "level.h"
+#include "bossKomsai.h"
 using namespace std;
 
 constexpr int SHIP_WIDTH = 56;
@@ -22,6 +23,7 @@ public:
     int getPlayerX() const { return playerX; }
     const std::vector<Bullet>& getBullets() const { return bullets; }
     const std::vector<Komsai>& getKomsais() const { return komsais; }
+    const std::vector<BossKomsai>& getBoss() const { return erylBoss; }
 
     int moveRight();
     int moveLeft();
@@ -30,6 +32,7 @@ public:
     int get_score();
     int getPlayerLife() const;
     int getcurrentLevel() const;
+    void spawnBoss();
 
 private:
     Game() = default; // private constructor for singleton
@@ -43,6 +46,8 @@ private:
     int playerX = 0;
     vector<Bullet> bullets;
     vector<Komsai> komsais;
+    vector<BossKomsai> erylBoss;
+    bool bossActive = false;
     Level gameLevel;
     int lastMilestone = 0;
 };
@@ -69,11 +74,16 @@ void Game::update() {
     // Player movement
     gameLevel.player_movement(playerX, playerXMovement, screenWidth, SHIP_WIDTH);
 
-    // Komsai movement
-    gameLevel.komsai_movement(komsais, bullets, score, playerLife, getScreenHeight(), getScreenWidth());
+    //Komsai and Boss Movement
+    if (gameLevel.get_LevelNumber() == 4) {
+        gameLevel.boss_movement(erylBoss, bullets, score, playerLife, getScreenHeight(), getScreenWidth());
+    } else {
+        gameLevel.komsai_movement(komsais, bullets, score, playerLife, getScreenHeight(), getScreenWidth());
+    }
 
     // Bullet movement
     gameLevel.bullet_movement(bullets);
+
 }
 
 int Game::getScreenWidth() {
@@ -108,6 +118,10 @@ void Game::shootBullet() {
 
 void Game::komsaiGenerator() {
     gameLevel.komsaiGenerator(screenWidth, screenHeight, komsais);
+}
+
+void Game::spawnBoss() {
+    gameLevel.bossSpawner(screenWidth, screenHeight, erylBoss);
 }
 
 int Game::get_score() {
@@ -213,5 +227,31 @@ extern "C" {
     EMSCRIPTEN_KEEPALIVE
     int get_game_level() {
         return Game::instance().getcurrentLevel();
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void spawn_boss() {
+        Game::instance().spawnBoss();
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    int get_boss_x(int index) {
+        const auto& boss = Game::instance().getBoss();
+        if (index < 0 || index >= boss.size()) return -1;
+        return boss[index].get_BossKomsaiX();
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    int get_boss_y(int index) {
+        const auto& boss = Game::instance().getBoss();
+        if (index < 0 || index >= boss.size()) return -1;
+        return boss[index].get_BossKomsaiY();
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    int get_boss_health(int index) {
+        const auto& boss = Game::instance().getBoss();
+        if (index < 0 || index >= boss.size()) return -1;
+        return boss[index].get_BossHealth();
     }
 }
