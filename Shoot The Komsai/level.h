@@ -4,7 +4,7 @@
 #include <vector>
 #include "bullet.h"
 #include "komsai.h"
-#include "level.h"
+#include "bossKomsai.h"
 using namespace std;
 
 class Level{
@@ -30,10 +30,14 @@ public:
     //Movements
     void player_movement(int& playerX, int& playerXMovement, int screenWidth, int SHIP_WIDTH);
     void komsai_movement(vector<Komsai>& komsais, vector<Bullet>& bullets, int& score, int& playerLife, int screenHeight, int screenWidth);
+    void boss_movement(vector<BossKomsai>& erylBoss, int& playerX, vector<Bullet>& bullets,int& score, int& playerLife, int screenHeight, int screenWidth);
     void bullet_movement(vector<Bullet>& bullets);
 
     //Komsai Generation
     void komsaiGenerator(int screenWidth, int screenHeight,vector<Komsai>& komsais);
+
+    //Boss Spawning
+    void bossSpawner(int screenWidth, int screenHeight, vector<BossKomsai>& erylBoss);
 
 private:
     //Attributes

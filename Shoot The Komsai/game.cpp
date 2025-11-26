@@ -4,6 +4,7 @@
 #include "bullet.h"
 #include "komsai.h"
 #include "level.h"
+#include "bossKomsai.h"
 using namespace std;
 
 constexpr int SHIP_WIDTH = 56;
@@ -11,6 +12,7 @@ constexpr int SHIP_WIDTH = 56;
 class Game {
 public:
     static Game& instance() {
+        srand(static_cast<unsigned int>(time(0)));
         static Game instance;
         return instance;
     }
@@ -22,14 +24,17 @@ public:
     int getPlayerX() const { return playerX; }
     const std::vector<Bullet>& getBullets() const { return bullets; }
     const std::vector<Komsai>& getKomsais() const { return komsais; }
+    const std::vector<BossKomsai>& getBoss() const { return erylBoss; }
 
     int moveRight();
     int moveLeft();
-    void shootBullet();
+    void shootBulletPlayer();
+    void shootBulletBoss();
     void komsaiGenerator();
     int get_score();
     int getPlayerLife() const;
     int getcurrentLevel() const;
+    void spawnBoss();
 
 private:
     Game() = default; // private constructor for singleton
@@ -43,6 +48,8 @@ private:
     int playerX = 0;
     vector<Bullet> bullets;
     vector<Komsai> komsais;
+    vector<BossKomsai> erylBoss;
+    bool bossActive = false;
     Level gameLevel;
     int lastMilestone = 0;
 };
@@ -69,11 +76,16 @@ void Game::update() {
     // Player movement
     gameLevel.player_movement(playerX, playerXMovement, screenWidth, SHIP_WIDTH);
 
-    // Komsai movement
-    gameLevel.komsai_movement(komsais, bullets, score, playerLife, getScreenHeight(), getScreenWidth());
+    //Komsai and Boss Movement
+    if ((gameLevel.get_LevelNumber()+1) % 3 == 0 && gameLevel.get_LevelNumber() != 0) {
+        gameLevel.boss_movement(erylBoss, playerX, bullets, score, playerLife, getScreenHeight(), getScreenWidth());
+    } else {
+        gameLevel.komsai_movement(komsais, bullets, score, playerLife, getScreenHeight(), getScreenWidth());
+    }
 
     // Bullet movement
     gameLevel.bullet_movement(bullets);
+
 }
 
 int Game::getScreenWidth() {
@@ -98,7 +110,7 @@ int Game::moveLeft() {
     return playerXMovement;
 }
 
-void Game::shootBullet() {
+void Game::shootBulletPlayer() {
     Bullet bullet;
     bullet.set_bulletX(playerX + SHIP_WIDTH / 2);
     bullet.set_bulletY(getScreenHeight()-80);
@@ -106,8 +118,22 @@ void Game::shootBullet() {
     bullets.push_back(bullet);
 }
 
+void Game::shootBulletBoss() {
+    Bullet bullet;
+    bullet.set_bulletX(getBoss()[0].get_BossKomsaiX() + rand() % 200);
+    bullet.set_bulletY(getBoss()[0].get_BossKomsaiY()+150);
+    bullet.set_bulletSpeed(7);
+    bullet.set_bulletType(static_cast<Bullet::BulletType>(1));
+    bullets.push_back(bullet);
+}
+
 void Game::komsaiGenerator() {
     gameLevel.komsaiGenerator(screenWidth, screenHeight, komsais);
+}
+
+void Game::spawnBoss() {
+    erylBoss.clear();
+    gameLevel.bossSpawner(screenWidth, screenHeight, erylBoss);
 }
 
 int Game::get_score() {
@@ -146,8 +172,13 @@ extern "C" {
     }
 
     EMSCRIPTEN_KEEPALIVE
-    void shoot_bullet() {
-        Game::instance().shootBullet();
+    void shoot_bullet_player() {
+        Game::instance().shootBulletPlayer();
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void shoot_bullet_boss() {
+        Game::instance().shootBulletBoss();
     }
 
     EMSCRIPTEN_KEEPALIVE
@@ -213,5 +244,31 @@ extern "C" {
     EMSCRIPTEN_KEEPALIVE
     int get_game_level() {
         return Game::instance().getcurrentLevel();
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void spawn_boss() {
+        Game::instance().spawnBoss();
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    int get_boss_x(int index) {
+        const auto& boss = Game::instance().getBoss();
+        if (index < 0 || index >= boss.size()) return -1;
+        return boss[index].get_BossKomsaiX();
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    int get_boss_y(int index) {
+        const auto& boss = Game::instance().getBoss();
+        if (index < 0 || index >= boss.size()) return -1;
+        return boss[index].get_BossKomsaiY();
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    int get_boss_health(int index) {
+        const auto& boss = Game::instance().getBoss();
+        if (index < 0 || index >= boss.size()) return -1;
+        return boss[index].get_BossHealth();
     }
 }
