@@ -12,6 +12,7 @@ constexpr int SHIP_WIDTH = 56;
 class Game {
 public:
     static Game& instance() {
+        srand(static_cast<unsigned int>(time(0)));
         static Game instance;
         return instance;
     }
@@ -76,7 +77,7 @@ void Game::update() {
     gameLevel.player_movement(playerX, playerXMovement, screenWidth, SHIP_WIDTH);
 
     //Komsai and Boss Movement
-    if ((gameLevel.get_LevelNumber()+1) % 2 == 0 && gameLevel.get_LevelNumber() != 0) {
+    if ((gameLevel.get_LevelNumber()+1) % 3 == 0 && gameLevel.get_LevelNumber() != 0) {
         gameLevel.boss_movement(erylBoss, playerX, bullets, score, playerLife, getScreenHeight(), getScreenWidth());
     } else {
         gameLevel.komsai_movement(komsais, bullets, score, playerLife, getScreenHeight(), getScreenWidth());
@@ -119,8 +120,8 @@ void Game::shootBulletPlayer() {
 
 void Game::shootBulletBoss() {
     Bullet bullet;
-    bullet.set_bulletX(getBoss()[0].get_BossKomsaiX() + rand() % 300);
-    bullet.set_bulletY(getBoss()[0].get_BossKomsaiY() + 300);
+    bullet.set_bulletX(getBoss()[0].get_BossKomsaiX() + rand() % 200);
+    bullet.set_bulletY(getBoss()[0].get_BossKomsaiY()+150);
     bullet.set_bulletSpeed(10);
     bullet.set_bulletType(static_cast<Bullet::BulletType>(1));
     bullets.push_back(bullet);

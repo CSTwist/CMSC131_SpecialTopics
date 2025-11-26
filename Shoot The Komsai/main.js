@@ -493,7 +493,7 @@ window.startGame = function () {
             
             const internalLevel = get_game_level(); 
             
-            if ((internalLevel+1) % 2 == 0 && internalLevel > 0) {
+            if ((internalLevel+1) % 3 == 0 && internalLevel > 0) {
                 // BOSS LEVEL (Level 2)
                 if (!bossSpawned) {  
                     spawnBoss();
@@ -511,13 +511,14 @@ window.startGame = function () {
                 if (Module._get_boss_x && Module._get_boss_health != 0) {
                     const x = Module._get_boss_x(0);
                     const y = Module._get_boss_y(0);
-                    ctx.drawImage(bossImg, x, y, 300, 300);
+                    ctx.drawImage(bossImg, x, y, 200, 200);
                 }
                 else if (Module._get_boss_health == 0){
                     bossSpawned = false;
                 }
             } else {
                 // NORMAL LEVELS
+                bossSpawned = false;
                 spawnKomsai();
                 for (let i = 0; i < komsai_count(); i++) {
                     const x = Module._get_komsai_x(i);

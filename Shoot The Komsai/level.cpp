@@ -58,7 +58,7 @@ void Level::komsaiGenerator(int screenWidth, int screenHeight, vector<Komsai>& k
 void Level::bossSpawner(int screenWidth, int screenHeight, vector<BossKomsai>& erylBoss){
     BossKomsai eryl;
     
-    eryl.set_BossKomsaiX(rand() % (screenWidth - 300));
+    eryl.set_BossKomsaiX(rand() % (screenWidth - 200));
     eryl.set_BossKomsaiY(0);
 
     // Random initial speeds: horizontal can be left or right, vertical small
@@ -156,7 +156,7 @@ void Level::boss_movement(vector<BossKomsai>& erylBoss, int& playerX, vector<Bul
         it->set_BossKomsaiY(it->get_BossKomsaiY() + it->get_BossSpeedY());
 
         
-        if (it->get_BossKomsaiX() <= 0 || it->get_BossKomsaiX() >= screenWidth - 300)
+        if (it->get_BossKomsaiX() <= 0 || it->get_BossKomsaiX() >= screenWidth - 200)
             it->set_BossSpeedX(-it->get_BossSpeedX());
 
         if (it->get_BossKomsaiY() <= 0 || it->get_BossKomsaiY() >= screenHeight - 600)
@@ -165,9 +165,9 @@ void Level::boss_movement(vector<BossKomsai>& erylBoss, int& playerX, vector<Bul
 
         bool destroyed = false;
         for (auto bulletIt = bullets.begin(); bulletIt != bullets.end(); ) {
-            if (bulletIt->get_bulletY() < it->get_BossKomsaiY() + 300 &&
+            if (bulletIt->get_bulletY() < it->get_BossKomsaiY() + 200 &&
                 bulletIt->get_bulletY() + 16 > it->get_BossKomsaiY() &&
-                bulletIt->get_bulletX() < it->get_BossKomsaiX() + 300 &&
+                bulletIt->get_bulletX() < it->get_BossKomsaiX() + 200 &&
                 bulletIt->get_bulletX() + 8 > it->get_BossKomsaiX() && bulletIt->get_bulletType() == 0) {
 
                 bulletIt = bullets.erase(bulletIt);
