@@ -46,6 +46,75 @@ window.startGame = function () {
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
+    const sfxExplosion = new Audio("assets/music/boom2.wav");
+    const sfxDamage = new Audio("assets/music/boom11.wav");
+    const sfxHeal = new Audio("assets/music/sound3.wav");
+    const sfxAlarm = new Audio("assets/music/alarm sound.mp3");
+
+    sfxAlarm.loop = true;
+    sfxAlarm.volume = 0.5;
+
+    sfxExplosion.volume = 0.6;
+    sfxDamage.volume = 0.8;
+    sfxHeal.volume = 0.8;
+
+    class FloatingText {
+        constructor(x, y, text, color) {
+            this.x = x;
+            this.y = y;
+            this.text = text;
+            this.color = color;
+            this.velocity = -2;
+            this.alpha = 1;
+            this.life = 50;
+        }
+        update() {
+            this.y += this.velocity;
+            this.alpha -= 0.02;
+            this.life--;
+        }
+        draw(ctx) {
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, this.alpha);
+            ctx.fillStyle = this.color;
+            ctx.font = "60px 'Pixelify Sans'";
+            ctx.shadowColor = this.color;
+            ctx.shadowBlur = 5;
+            ctx.fillText(this.text, this.x, this.y);
+            ctx.restore();
+        }
+    }
+    let floatingTexts = [];
+
+    let particles = [];
+    class Particle {
+        constructor(x, y, color) {
+            this.x = x;
+            this.y = y;
+            this.vx = (Math.random() - 0.5) * 10;
+            this.vy = (Math.random() - 0.5) * 10;
+            this.life = 1.0;
+            this.color = color;
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.life -= 0.02;
+        }
+        draw(ctx) {
+            ctx.globalAlpha = this.life;
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, 5, 5);
+            ctx.globalAlpha = 1.0;
+        }
+    }
+
+    function createExplosion(x, y, color="orange") {
+        for(let i=0; i<20; i++) {
+            particles.push(new Particle(x, y, color));
+        }
+    }
+
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -314,6 +383,18 @@ window.startGame = function () {
             return list;
         }
 
+        function getEnemiesList() {
+            const count = komsai_count();
+            const list = [];
+            for (let i = 0; i < count; i++) {
+                list.push({
+                    x: Module._get_komsai_x(i),
+                    y: Module._get_komsai_y(i)
+                });
+            }
+            return list;
+        }
+
         function loop() {
             if (isPaused) {
                 return; // Rendering paused handled by key listener above
@@ -323,7 +404,7 @@ window.startGame = function () {
                     sfxAlarm.play().catch(e => {});
                 }
             }
-            
+
             handleInput();
 
             const enemiesBefore = getEnemiesList();
