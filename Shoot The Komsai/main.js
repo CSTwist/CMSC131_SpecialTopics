@@ -4,7 +4,7 @@
     const ctx = canvas.getContext("2d");
     let width, height;
     const stars = [];
-    const numStars = 150;
+    const numStars = 150; 
 
     function resize() {
         width = window.innerWidth;
@@ -46,44 +46,21 @@ window.startGame = function () {
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
-
     // --- SFX SETUP ---
     const sfxExplosion = new Audio("assets/music/boom2.wav");
     const sfxDamage = new Audio("assets/music/boom11.wav");
     const sfxHeal = new Audio("assets/music/sound3.wav");
-    const sfxAlarm = new Audio("assets/music/alarm sound.mp3");
+    const sfxAlarm = new Audio("assets/music/alarm sound.mp3"); // Ensure this matches your filename
     const startSound = new Audio("assets/music/shoot_sound.mp3");
     const bgMusic = document.getElementById("bgMusic");
-
-    sfxAlarm.loop = true;
-    sfxAlarm.volume = 0.5;
-    sfxExplosion.volume = 0.6;
+    
+    sfxAlarm.loop = true; 
+    sfxAlarm.volume = 0.5; 
+    sfxExplosion.volume = 0.6; 
     sfxDamage.volume = 0.8;
     sfxHeal.volume = 0.8;
     startSound.volume = 1;
     if(bgMusic) bgMusic.volume = 0.3;
-
-    // --- MUTE BUTTON LOGIC ---
-    let isMuted = false;
-    const muteBtn = document.getElementById("muteBtn");
-    if(muteBtn) {
-        muteBtn.addEventListener("click", () => {
-            isMuted = !isMuted;
-            
-            const allAudio = [bgMusic, startSound, sfxExplosion, sfxDamage, sfxHeal, sfxAlarm];
-            allAudio.forEach(audio => {
-                if(audio) audio.muted = isMuted;
-            });
-
-            muteBtn.innerText = isMuted ? "🔇" : "🔊";
-        });
-    }
 
     // --- FLOATING TEXT CLASS ---
     class FloatingText {
@@ -92,9 +69,9 @@ window.startGame = function () {
             this.y = y;
             this.text = text;
             this.color = color;
-            this.velocity = -2;
+            this.velocity = -2; 
             this.alpha = 1;
-            this.life = 50;
+            this.life = 50; 
         }
         update() {
             this.y += this.velocity;
@@ -105,7 +82,7 @@ window.startGame = function () {
             ctx.save();
             ctx.globalAlpha = Math.max(0, this.alpha);
             ctx.fillStyle = this.color;
-            ctx.font = "60px 'Pixelify Sans'";
+            ctx.font = "60px 'Pixelify Sans'"; 
             ctx.shadowColor = this.color;
             ctx.shadowBlur = 5;
             ctx.fillText(this.text, this.x, this.y);
@@ -144,8 +121,15 @@ window.startGame = function () {
         }
     }
 
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
     let isPaused = false;
-    let previousLife = 5;
+    let previousLife = 5; 
     let previousScore = 0;
     
     // Level & Boss State
@@ -153,6 +137,7 @@ window.startGame = function () {
     let levelStartTime = 0;
     let bossSpawned = false;
     let lastShuffledLevel = 0;
+    const BOSS_MAX_HP = 20; // Based on C++ code
 
     function initWhenModuleReady() {
         if (!Module || !Module.calledRun) {
@@ -160,12 +145,12 @@ window.startGame = function () {
             return;
         }
 
-        // UPDATE SIGNATURE CHANGED: now takes 'number' (dt)
-        const update = Module.cwrap("update", null, ["number"]);
+        const update = Module.cwrap("update", null, ["number"]); // Accepts dt
         const getX = Module.cwrap("get_x", "number", []);
         const right_movement = Module.cwrap("right_movement", null, []);
         const left_movement = Module.cwrap("left_movement", null, []);
         const shoot_bullet = Module.cwrap("shoot_bullet_player", null, []);
+        const shoot_bullet_boss = Module.cwrap("shoot_bullet_boss", null, []);
         const bullet_count = Module.cwrap("get_bullet_count", "number", []);
         const komsai_count = Module.cwrap("get_komsai_count", "number", []);
         const generate_komsai = Module.cwrap("generate_komsai", null, []);
@@ -173,8 +158,7 @@ window.startGame = function () {
         const get_score = Module.cwrap("get_score", "number", []);
         const get_player_life = Module.cwrap("get_player_life", "number", []);
         const get_game_level = Module.cwrap("get_game_level", "number", []);
-        const spawnBoss = Module.cwrap("spawn_boss", null, []); 
-        const shoot_bullet_boss = Module.cwrap("shoot_bullet_boss", null, []);
+        const spawnBoss = Module.cwrap("spawn_boss", null, []);
         const get_boss_x = Module.cwrap("get_boss_x", "number", ["number"]);
         const get_boss_y = Module.cwrap("get_boss_y", "number", ["number"]);
         const get_boss_health = Module.cwrap("get_boss_health", "number", ["number"]);
@@ -190,6 +174,7 @@ window.startGame = function () {
             [0,0,1,0,1,0,0]
         ];
 
+        // Images
         const explosionImg = new Image();
         explosionImg.src = "assets/images/explosion.png";
         
@@ -240,7 +225,7 @@ window.startGame = function () {
                 loadedCount++;
                 if (loadedCount === komsaiImages.length) {
                     if(bgMusic) bgMusic.play().catch(e => console.log("Audio pending interaction"));
-                    loop(0); // Start loop with 0 timestamp
+                    loop(0); 
                 }
             }
         });
@@ -260,7 +245,6 @@ window.startGame = function () {
                     if(!sfxAlarm.paused) sfxAlarm.pause();
                 } else {
                     if(pauseMenu) pauseMenu.style.display = 'none';
-                    // Reset lastTime to avoid a huge jump after pause
                     lastTime = performance.now();
                     requestAnimationFrame(loop); 
                 }
@@ -330,27 +314,19 @@ window.startGame = function () {
 
             // --- DELTA TIME CALCULATION ---
             if (!lastTime) lastTime = timestamp;
-            // Calculate dt relative to 60FPS (16.66ms per frame)
-            // If running at 60FPS, dt ~= 1.0
-            // If running at 120FPS, dt ~= 0.5
             const dt = (timestamp - lastTime) / 16.6667;
             lastTime = timestamp;
-
-            // Prevent huge jumps if tab was inactive or lag spike
             const safeDt = Math.min(dt, 4.0); 
-            // ------------------------------
 
             const currentLife = get_player_life();
-            if(currentLife > 0 && currentLife <= 2 && sfxAlarm.paused && !isMuted) {
+            if(currentLife > 0 && currentLife <= 2 && sfxAlarm.paused) {
                 sfxAlarm.play().catch(e => {});
             }
             
             handleInput();
 
             const enemiesBefore = getEnemiesList();
-            
-            update(safeDt); // Pass Delta Time to C++
-            
+            update(safeDt); 
             const enemiesAfter = getEnemiesList();
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -408,7 +384,7 @@ window.startGame = function () {
                     spawnY = 150;
                 }
                 
-                floatingTexts.push(new FloatingText(spawnX, spawnY, + `${diff}`, "#ffff00"));
+                floatingTexts.push(new FloatingText(spawnX, spawnY, `+${diff}`, "#ffff00"));
                 previousScore = currentScore;
             }
 
@@ -508,7 +484,7 @@ window.startGame = function () {
             if ((internalLevel+1) % 3 == 0 && internalLevel > 0) {
                 // BOSS LEVEL
                 if (!bossSpawned) {  
-                    // Wait for level text (3s)
+                    // Wait for level text (3s) before spawning Boss
                     if (Date.now() - levelStartTime > 3000) {
                         spawnBoss();
                         bossSpawned = true;
