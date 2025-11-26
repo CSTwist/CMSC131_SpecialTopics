@@ -15,7 +15,7 @@ body {
   user-select: none;
 }
 
-/* --- NEW: CRITICAL HEALTH VIGNETTE --- */
+/* --- CRITICAL HEALTH VIGNETTE --- */
 .critical-overlay {
   position: absolute;
   top: 0;
@@ -40,16 +40,17 @@ body {
   100% { opacity: 0.5; }
 }
 
-/* --- NEW: BOSS HEALTH HUD --- */
+/* --- BOSS HEALTH HUD --- */
 #boss-hud {
   position: absolute;
-  top: 20px;
+  /* CHANGED: Moved down to avoid overlap with top HUD elements */
+  top: 60px; 
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 60%;
+  width: 50%; /* Slightly narrower */
   z-index: 10;
 }
 
@@ -63,7 +64,7 @@ body {
 
 .boss-bar-container {
   width: 100%;
-  height: 25px;
+  height: 20px; /* Slightly thinner */
   border: 2px solid #ff0000;
   background: rgba(0, 0, 0, 0.6);
   box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
@@ -79,6 +80,7 @@ body {
   box-shadow: 0 0 10px red;
 }
 
+/* --- GAME SCREEN LAYOUT --- */
 .game-screen {
   display: none;
   flex-direction: row;
@@ -136,7 +138,7 @@ body {
 .lifeContainer{
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  justify-content: left;
   width: 100%;
   height: 30px;
   margin-top: 20px;
@@ -146,15 +148,14 @@ body {
 #levelText {
   position: absolute;
   color: white;
-  font-size: 2rem; 
-  bottom: 20px; 
-  right: 20px; 
-  top: auto; 
-  left: auto; 
-  transform: none; 
-  text-shadow: 0 0 10px cyan;
-  pointer-events: none;
-  z-index: 2;
+  font-size: 6rem; /* Keep large size from previous update */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-shadow: 0 0 20px cyan, 4px 4px 0px #000;
+  opacity: 0; 
+  pointer-events: none; 
+  z-index: 100; 
   white-space: nowrap;
 }
 
@@ -163,11 +164,11 @@ body {
 }
 
 @keyframes levelFlash {
-  0% { opacity: 0; transform: scale(0.5); bottom: 50%; right: 50%; transform: translate(50%, 50%); }
-  10% { opacity: 1; transform: scale(3); bottom: 50%; right: 50%; transform: translate(50%, 50%); } 
-  30% { transform: scale(3); bottom: 50%; right: 50%; transform: translate(50%, 50%); }
-  80% { opacity: 1; transform: scale(1); bottom: 20px; right: 20px; transform: none; } 
-  100% { opacity: 1; bottom: 20px; right: 20px; transform: none;}
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  10% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 
+  20% { transform: translate(-50%, -50%) scale(1); } 
+  80% { opacity: 1; } 
+  100% { opacity: 0; } 
 }
 
 .lifeBox {
