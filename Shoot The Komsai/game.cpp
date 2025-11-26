@@ -5,6 +5,9 @@
 #include "komsai.h"
 #include "level.h"
 #include "bossKomsai.h"
+#include <cstdlib>
+#include <ctime>
+
 using namespace std;
 
 constexpr int SHIP_WIDTH = 56;
@@ -12,16 +15,16 @@ constexpr int SHIP_WIDTH = 56;
 class Game {
 public:
     static Game& instance() {
-        srand(static_cast<unsigned int>(time(0)));
         static Game instance;
+        // Move srand here if not already done
         return instance;
     }
 
-    void update();
+    void update(float dt); // UPDATED
     int getScreenWidth();
     int getScreenHeight();
 
-    int getPlayerX() const { return playerX; }
+    int getPlayerX() const { return static_cast<int>(playerX); } // Cast to int for rendering
     const std::vector<Bullet>& getBullets() const { return bullets; }
     const std::vector<Komsai>& getKomsais() const { return komsais; }
     const std::vector<BossKomsai>& getBoss() const { return erylBoss; }
@@ -37,15 +40,17 @@ public:
     void spawnBoss();
 
 private:
-    Game() = default; // private constructor for singleton
+    Game() {
+        srand(static_cast<unsigned int>(time(0)));
+    } 
 
     int currentLevel = 0;
     int playerLife = 5;
     int score = 0;
-    int playerXMovement = 0;
+    float playerXMovement = 0.0f; // CHANGED TO FLOAT
     int screenWidth = 0;
     int screenHeight = 0;
-    int playerX = 0;
+    float playerX = 0.0f; // CHANGED TO FLOAT
     vector<Bullet> bullets;
     vector<Komsai> komsais;
     vector<BossKomsai> erylBoss;
@@ -56,7 +61,7 @@ private:
 
 // ---------------- Implementation ----------------
 
-void Game::update() {
+void Game::update(float dt) { // UPDATED
     screenWidth = getScreenWidth();
     screenHeight = getScreenHeight();
 
@@ -72,20 +77,18 @@ void Game::update() {
         bullets.clear();
     }
 
-
     // Player movement
-    gameLevel.player_movement(playerX, playerXMovement, screenWidth, SHIP_WIDTH);
+    gameLevel.player_movement(playerX, playerXMovement, screenWidth, SHIP_WIDTH, dt);
 
-    //Komsai and Boss Movement
+    // Komsai and Boss Movement
     if ((gameLevel.get_LevelNumber()+1) % 3 == 0 && gameLevel.get_LevelNumber() != 0) {
-        gameLevel.boss_movement(erylBoss, playerX, bullets, score, playerLife, getScreenHeight(), getScreenWidth());
+        gameLevel.boss_movement(erylBoss, playerX, bullets, score, playerLife, getScreenHeight(), getScreenWidth(), dt);
     } else {
-        gameLevel.komsai_movement(komsais, bullets, score, playerLife, getScreenHeight(), getScreenWidth());
+        gameLevel.komsai_movement(komsais, bullets, score, playerLife, getScreenHeight(), getScreenWidth(), dt);
     }
 
     // Bullet movement
-    gameLevel.bullet_movement(bullets);
-
+    gameLevel.bullet_movement(bullets, dt);
 }
 
 int Game::getScreenWidth() {
@@ -101,30 +104,33 @@ int Game::getScreenHeight() {
 }
 
 int Game::moveRight() {
-    playerXMovement = 10;
-    return playerXMovement;
+    playerXMovement = 10.0f; // Float speed
+    return 1;
 }
 
 int Game::moveLeft() {
-    playerXMovement = -10;
-    return playerXMovement;
+    playerXMovement = -10.0f; // Float speed
+    return 1;
 }
 
 void Game::shootBulletPlayer() {
     Bullet bullet;
     bullet.set_bulletX(playerX + SHIP_WIDTH / 2);
     bullet.set_bulletY(getScreenHeight()-80);
-    bullet.set_bulletSpeed(-10);
+    bullet.set_bulletSpeed(-10.0f); // Float speed
     bullets.push_back(bullet);
 }
 
 void Game::shootBulletBoss() {
     Bullet bullet;
-    bullet.set_bulletX(getBoss()[0].get_BossKomsaiX() + rand() % 200);
-    bullet.set_bulletY(getBoss()[0].get_BossKomsaiY()+150);
-    bullet.set_bulletSpeed(7);
-    bullet.set_bulletType(static_cast<Bullet::BulletType>(1));
-    bullets.push_back(bullet);
+    // Ensure boss exists before accessing
+    if(!getBoss().empty()) {
+        bullet.set_bulletX(getBoss()[0].get_BossKomsaiX() + rand() % 200);
+        bullet.set_bulletY(getBoss()[0].get_BossKomsaiY()+150);
+        bullet.set_bulletSpeed(7.0f); // Float speed
+        bullet.set_bulletType(static_cast<Bullet::BulletType>(1));
+        bullets.push_back(bullet);
+    }
 }
 
 void Game::komsaiGenerator() {
@@ -151,9 +157,10 @@ int Game::getcurrentLevel() const {
 // ---------------- Exposed to JavaScript ----------------
 extern "C" {
 
+    // UPDATED: Accepts dt
     EMSCRIPTEN_KEEPALIVE
-    void update() {
-        Game::instance().update();
+    void update(float dt) {
+        Game::instance().update(dt);
     }
 
     EMSCRIPTEN_KEEPALIVE
@@ -239,7 +246,7 @@ extern "C" {
     EMSCRIPTEN_KEEPALIVE
     int get_player_life() {
         return Game::instance().getPlayerLife();
-    } // extern "C"
+    } 
 
     EMSCRIPTEN_KEEPALIVE
     int get_game_level() {

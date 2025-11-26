@@ -1,34 +1,31 @@
 #ifndef KOMSAI_H
 #define KOMSAI_H
 
-class Komsai{
+class Komsai {
 public:
-    //Constructor
-    Komsai();
-
     enum KomsaiType {
         HEALER,
-        TARGET,
+        TARGET
     };
 
-    //Methods
-    //Getters
+    Komsai();
+
+    //Getter
     int get_KomsaiY() const;
     int get_KomsaiX() const;
-    int get_KomsaiSpeed() const;
+    float get_KomsaiSpeed() const;
     int get_KomsaiType() const;
 
-    //Setters
-    void set_KomsaiY(int y);
-    void set_KomsaiX(int x);
-    void set_KomsaiSpeed(int speed);
+    //Setter
+    void set_KomsaiY(float y);
+    void set_KomsaiX(float x);
+    void set_KomsaiSpeed(float speed);
     void set_KomsaiType(KomsaiType type);
 
 private:
-    //Attributes
-    int komsaiY;
-    int komsaiX;
-    int komsaiSpeed;
+    float komsaiY;
+    float komsaiX;
+    float komsaiSpeed;
     KomsaiType komsaiType;
 };
 
