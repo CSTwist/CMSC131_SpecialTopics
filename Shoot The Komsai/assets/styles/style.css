@@ -15,6 +15,70 @@ body {
   user-select: none;
 }
 
+/* --- NEW: CRITICAL HEALTH VIGNETTE --- */
+.critical-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  box-shadow: inset 0 0 100px rgba(255, 0, 0, 0.8);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+  transition: opacity 0.5s ease;
+}
+
+.critical-overlay.active {
+  opacity: 1;
+  animation: pulseRed 1s infinite;
+}
+
+@keyframes pulseRed {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+/* --- NEW: BOSS HEALTH HUD --- */
+#boss-hud {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 60%;
+  z-index: 10;
+}
+
+.boss-label {
+  color: #ff0000;
+  font-size: 1.5rem;
+  text-shadow: 0 0 10px red;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.boss-bar-container {
+  width: 100%;
+  height: 25px;
+  border: 2px solid #ff0000;
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.boss-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff3333, #ff0000);
+  width: 100%;
+  transition: width 0.2s ease-out;
+  box-shadow: 0 0 10px red;
+}
+
 .game-screen {
   display: none;
   flex-direction: row;
@@ -26,7 +90,7 @@ body {
 .scoreContainer {
   display: flex;
   flex-direction: column;
-  width: 15%;
+  width: 15%; 
   margin-right: 0px;
   align-items: center;
   padding-top: 20px;
@@ -51,7 +115,7 @@ body {
 .targetBox img, .healBox img {
     border-radius: 50%;
     margin: 10px 0;
-    border: 3px solid;
+    border: 3px solid; 
     box-shadow: 0 0 10px rgba(0,0,0,0.5);
     width: 80px;
     height: 80px;
@@ -81,15 +145,16 @@ body {
 
 #levelText {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: cyan;
-  font-size: 6rem;
-  text-shadow: 0 0 20px cyan, 4px 4px 0px #000;
-  opacity: 0;
+  color: white;
+  font-size: 2rem; 
+  bottom: 20px; 
+  right: 20px; 
+  top: auto; 
+  left: auto; 
+  transform: none; 
+  text-shadow: 0 0 10px cyan;
   pointer-events: none;
-  z-index: 100;
+  z-index: 2;
   white-space: nowrap;
 }
 
@@ -98,11 +163,11 @@ body {
 }
 
 @keyframes levelFlash {
-  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-  10% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-  20% { transform: translate(-50%, -50%) scale(1); }
-  80% { opacity: 1; }
-  100% { opacity: 0; }
+  0% { opacity: 0; transform: scale(0.5); bottom: 50%; right: 50%; transform: translate(50%, 50%); }
+  10% { opacity: 1; transform: scale(3); bottom: 50%; right: 50%; transform: translate(50%, 50%); } 
+  30% { transform: scale(3); bottom: 50%; right: 50%; transform: translate(50%, 50%); }
+  80% { opacity: 1; transform: scale(1); bottom: 20px; right: 20px; transform: none; } 
+  100% { opacity: 1; bottom: 20px; right: 20px; transform: none;}
 }
 
 .lifeBox {
