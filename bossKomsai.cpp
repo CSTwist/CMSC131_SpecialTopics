@@ -42,5 +42,5 @@ void BossKomsai::set_BossSpeedY(float speed) {
 }
 
 void BossKomsai::decrement_BossHealth() {
-    bossHealth--; 
+    bossHealth--;
 }
