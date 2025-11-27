@@ -3,7 +3,7 @@
 #include "bullet.h"
 #include "bossKomsai.h"
 #include <vector>
-#include <cstdlib> 
+#include <cstdlib>
 
 using namespace std;
 
@@ -47,7 +47,7 @@ void Level::komsaiGenerator(int screenWidth, int screenHeight, vector<Komsai>& k
     Komsai::KomsaiType type;
 
     if (r == 0) type = Komsai::HEALER;
-    else type = Komsai::TARGET; 
+    else type = Komsai::TARGET;
 
     komsai.set_KomsaiType(type);
     komsais.push_back(komsai);
@@ -55,15 +55,15 @@ void Level::komsaiGenerator(int screenWidth, int screenHeight, vector<Komsai>& k
 
 void Level::bossSpawner(int screenWidth, int screenHeight, vector<BossKomsai>& erylBoss){
     BossKomsai eryl;
-    
+
     eryl.set_BossKomsaiX(rand() % (screenWidth - 200));
     eryl.set_BossKomsaiY(0);
 
-    float baseHor = 3.0f + (rand() % 3); 
-    if (rand() % 2 == 0) baseHor = -baseHor; 
+    float baseHor = 3.0f + (rand() % 3);
+    if (rand() % 2 == 0) baseHor = -baseHor;
     eryl.set_BossSpeedX(baseHor);
 
-    float baseVer = 1.0f + (rand() % 2); 
+    float baseVer = 1.0f + (rand() % 2);
     if (rand() % 2 == 0) baseVer = -baseVer;
     eryl.set_BossSpeedY(baseVer);
 
@@ -82,7 +82,7 @@ void Level::player_movement(float& playerX, float& playerXMovement,
 }
 
 void Level::komsai_movement(vector<Komsai>& komsais, vector<Bullet>& bullets,
-                           int& score, int& playerLife, int screenHeight, int screenWidth, float dt) {
+    int& score, int& playerLife, int screenHeight, int screenWidth, float dt) {
     for (auto it = komsais.begin(); it != komsais.end(); ) {
         if (komsaiMovement == MOVE_LEFT) {
             it->set_KomsaiX(it->get_KomsaiX() - (it->get_KomsaiSpeed() * dt));
@@ -115,7 +115,7 @@ void Level::komsai_movement(vector<Komsai>& komsais, vector<Bullet>& bullets,
                 continue;
             }
         }
-        
+
         bool destroyed = false;
         for (auto bulletIt = bullets.begin(); bulletIt != bullets.end(); ) {
             // Collision logic uses integers (get_X returns int), safe for bounding box checks
@@ -132,24 +132,24 @@ void Level::komsai_movement(vector<Komsai>& komsais, vector<Bullet>& bullets,
                 }
                 it = komsais.erase(it);
                 destroyed = true;
-                break; 
+                break;
             } else {
                 ++bulletIt;
             }
         }
 
         if (!destroyed) {
-            ++it; 
+            ++it;
         }
     }
 }
 
 void Level::boss_movement(vector<BossKomsai>& erylBoss, float& playerX, vector<Bullet>& bullets,
-                           int& score, int& playerLife, int screenHeight, int screenWidth, float dt) {
+    int& score, int& playerLife, int screenHeight, int screenWidth, float dt) {
     for (auto it = erylBoss.begin(); it != erylBoss.end(); ) {
         it->set_BossKomsaiX(it->get_BossKomsaiX() + (it->get_BossSpeedX() * dt));
         it->set_BossKomsaiY(it->get_BossKomsaiY() + (it->get_BossSpeedY() * dt));
-        
+
         if (it->get_BossKomsaiX() <= 0 || it->get_BossKomsaiX() >= screenWidth - 200)
             it->set_BossSpeedX(-it->get_BossSpeedX());
 
@@ -169,13 +169,13 @@ void Level::boss_movement(vector<BossKomsai>& erylBoss, float& playerX, vector<B
                     it = erylBoss.erase(it);
                     destroyed = true;
                     score += 100;
-                    break; 
+                    break;
                 }
-            } else if (bulletIt->get_bulletType() == Bullet::BOSS) {  
-                constexpr int PLAYER_WIDTH = 56;   
-                constexpr int PLAYER_HEIGHT = 56;  
+            } else if (bulletIt->get_bulletType() == Bullet::BOSS) {
+                constexpr int PLAYER_WIDTH = 56;
+                constexpr int PLAYER_HEIGHT = 56;
 
-                int playerY = screenHeight - 80; 
+                int playerY = screenHeight - 80;
                 if (bulletIt->get_bulletX() < playerX + PLAYER_WIDTH &&
                     bulletIt->get_bulletX() + 8 > playerX &&
                     bulletIt->get_bulletY() < playerY + PLAYER_HEIGHT &&
@@ -184,7 +184,7 @@ void Level::boss_movement(vector<BossKomsai>& erylBoss, float& playerX, vector<B
                     bulletIt = bullets.erase(bulletIt);
                 }
                 else {
-                    ++bulletIt; 
+                    ++bulletIt;
                 }
             } else {
                 ++bulletIt;
@@ -192,7 +192,7 @@ void Level::boss_movement(vector<BossKomsai>& erylBoss, float& playerX, vector<B
         }
 
         if (!destroyed) {
-            ++it; 
+            ++it;
         }
     }
 }

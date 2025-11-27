@@ -4,7 +4,7 @@
 class BossKomsai {
 private:
     float bossKomsaiX, bossKomsaiY;
-    float speedX, speedY; 
+    float speedX, speedY;
     int bossHealth;
 
 public:
@@ -20,7 +20,7 @@ public:
     float get_BossSpeedX() const;
     float get_BossSpeedY() const;
 
-    void decrement_BossHealth(); 
+    void decrement_BossHealth();
     int get_BossHealth() const;
 };
 

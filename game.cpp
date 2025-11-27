@@ -42,7 +42,7 @@ public:
 private:
     Game() {
         srand(static_cast<unsigned int>(time(0)));
-    } 
+    }
 
     int currentLevel = 0;
     int playerLife = 5;
@@ -246,7 +246,7 @@ extern "C" {
     EMSCRIPTEN_KEEPALIVE
     int get_player_life() {
         return Game::instance().getPlayerLife();
-    } 
+    }
 
     EMSCRIPTEN_KEEPALIVE
     int get_game_level() {
